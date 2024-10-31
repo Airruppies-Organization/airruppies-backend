@@ -1,0 +1,195 @@
+const express = require("express");
+const router = express.Router();
+const {
+  productFormat,
+  cartFormat,
+  sessionFormat,
+  salesFormat,
+} = require("../schema/schema");
+const mongoose = require("mongoose");
+
+// Routes
+
+// get data
+router.get("/products", async (req, res) => {
+  const products = await productFormat.find({});
+  res.status(200).json(products);
+});
+
+// find a product
+router.get("/product", async (req, res) => {
+  const eanCode = req.query.ean_code; // Access query parameter here
+
+  try {
+    const product = await productFormat.findOne({ ean_code: eanCode });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// get cart data
+router.get("/cartData", async (req, res) => {
+  try {
+    const cartData = await cartFormat.find({});
+    res.json(cartData);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+// post cart data
+router.post("/cartData", async (req, res) => {
+  const { price, name, quantity, ean_code, id, cartFormat: format } = req.body;
+
+  try {
+    const cart = await cartFormat.create({
+      price,
+      name,
+      quantity,
+      ean_code,
+      id,
+      format, // Assuming 'productFormat' refers to the format of the product
+    });
+    res.status(200).json(cart);
+  } catch (err) {
+    res.status(400).json({ err: err.message });
+  }
+});
+
+// update cart
+// router.patch("/cartData/:id", async (req, res) => {
+//   const { id } = req.params;
+//   const { price, qty } = req.body;
+//   if (!mongoose.Types.ObjectId.isValid(id)) {
+//     return res.status(404).json({ error: "No such product" });
+//   }
+
+//   try {
+//     // Find and update the document
+//     const product = await cartFormat.findOneAndUpdate(
+//       { _id: id },
+//       { price, qty },
+//       { new: true }
+//     );
+
+//     // If no matching document found
+//     if (!product) {
+//       return res.status(404).json({ error: "Product not found" });
+//     }
+
+//     // Return the updated document
+//     res.status(200).json(product);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+// Delete cart item
+router.delete("/cartData/:_id", async (req, res) => {
+  const { _id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(_id)) {
+    return res.status(404).json({ error: "No such product" });
+  }
+  const product = await cartFormat.findByIdAndDelete(_id);
+  if (!product) {
+    return res.status(404).json({ error: "no such product" });
+  }
+  res.status(200).json(product);
+  console.log("item already deleted");
+});
+
+router.post("/sessionData", async (req, res) => {
+  const { id, code, method, status, data, sessionFormat: format } = req.body;
+
+  try {
+    const session = await sessionFormat.create({
+      id,
+      code,
+      method,
+      status,
+      data,
+      format, // Assuming 'productFormat' refers to the format of the product
+    });
+    res.status(200).json(session);
+  } catch (err) {
+    res.status(400).json({ err: err.message });
+  }
+});
+
+router.get("/sessionData", async (req, res) => {
+  try {
+    const { code } = req.query;
+
+    const result = await sessionFormat.findOne({ code });
+
+    if (!result) {
+      return res.status(404).json({ message: "Invalid code" });
+    }
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+router.delete("/sessionData", async (req, res) => {
+  try {
+    const { code } = req.query;
+    const result = await sessionFormat.findOneAndDelete({ code });
+    if (!result) {
+      console.log("Session not found");
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    res.status(200).json({ message: "Session deleted", result });
+    console.log("session deleted successfully");
+  } catch (err) {
+    res.status(400).json({ err: err.message });
+  }
+});
+
+router.post("/salesData", async (req, res) => {
+  const {
+    id,
+    code,
+    method,
+    status,
+    total,
+    data,
+    sessionFormat: format,
+  } = req.body;
+
+  try {
+    const result = await salesFormat.create({
+      id,
+      code,
+      method,
+      status,
+      total,
+      data,
+      format,
+    });
+
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(400).json({ err: err.message });
+  }
+});
+
+router.get("/salesData", async (req, res) => {
+  try {
+    const data = await salesFormat.find({});
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(400).json({ err: err.message });
+  }
+});
+module.exports = router;
