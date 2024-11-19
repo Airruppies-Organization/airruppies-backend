@@ -1,14 +1,32 @@
 const express = require("express");
 const router = express.Router();
+const requireAuth = require("../middleware/requireAuth");
+const User = require("../schema/userSchema");
+const mongoose = require("mongoose");
 const {
   productFormat,
   cartFormat,
   sessionFormat,
   salesFormat,
+  ordersFormat,
 } = require("../schema/schema");
-const mongoose = require("mongoose");
 
-// Routes
+// middleware
+router.use(requireAuth);
+
+//Routes
+
+// get profile
+router.get("/profile", async (req, res) => {
+  const user_id = req.user._id;
+  try {
+    const profile = await User.findById(user_id);
+
+    res.status(200).json(profile);
+  } catch (err) {
+    res.status(400).json({ err: err.message });
+  }
+});
 
 // get data
 router.get("/products", async (req, res) => {
@@ -35,9 +53,14 @@ router.get("/product", async (req, res) => {
 
 // get cart data
 router.get("/cartData", async (req, res) => {
+  const user_id = req.user._id;
+
+  // if (!mongoose.Types.ObjectId.isValid(user_id)) {
+  //   return res.status(400).json({ error: "Invalid user ID" });
+  // }
   try {
-    const cartData = await cartFormat.find({});
-    res.json(cartData);
+    const cartData = await cartFormat.find({ user_id });
+    res.status(200).json(cartData);
   } catch (err) {
     console.log(err);
     res.status(500).send("Server Error");
@@ -47,7 +70,7 @@ router.get("/cartData", async (req, res) => {
 // post cart data
 router.post("/cartData", async (req, res) => {
   const { price, name, quantity, ean_code, id, cartFormat: format } = req.body;
-
+  const user_id = req.user._id;
   try {
     const cart = await cartFormat.create({
       price,
@@ -55,7 +78,8 @@ router.post("/cartData", async (req, res) => {
       quantity,
       ean_code,
       id,
-      format, // Assuming 'productFormat' refers to the format of the product
+      user_id,
+      // format,
     });
     res.status(200).json(cart);
   } catch (err) {
@@ -109,6 +133,7 @@ router.delete("/cartData/:_id", async (req, res) => {
 
 router.post("/sessionData", async (req, res) => {
   const { id, code, method, status, data, sessionFormat: format } = req.body;
+  const user_id = req.user._id;
 
   try {
     const session = await sessionFormat.create({
@@ -117,26 +142,12 @@ router.post("/sessionData", async (req, res) => {
       method,
       status,
       data,
-      format, // Assuming 'productFormat' refers to the format of the product
+      user_id,
+      // format,
     });
     res.status(200).json(session);
   } catch (err) {
     res.status(400).json({ err: err.message });
-  }
-});
-
-router.get("/sessionData", async (req, res) => {
-  try {
-    const { code } = req.query;
-
-    const result = await sessionFormat.findOne({ code });
-
-    if (!result) {
-      return res.status(404).json({ message: "Invalid code" });
-    }
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
   }
 });
 
@@ -192,4 +203,35 @@ router.get("/salesData", async (req, res) => {
     res.status(400).json({ err: err.message });
   }
 });
+
+router.get("/orders", async (req, res) => {
+  const user_id = req.user._id;
+  try {
+    const data = await ordersFormat.find({ user_id });
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post("/orders", async (req, res) => {
+  const { id, code, method, status, total, data } = req.body;
+  const user_id = req.user._id;
+  try {
+    const addOrders = await ordersFormat.create({
+      id,
+      user_id,
+      code,
+      method,
+      status,
+      total,
+      data,
+    });
+
+    res.status(200).json(addOrders);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = router;
