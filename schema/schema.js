@@ -45,6 +45,10 @@ const cartFormat = new Schema(
     quantity: { type: Number },
     ean_code: { type: String, required: true },
     id: { type: String, required: true },
+    user_id: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
@@ -96,6 +100,35 @@ const salesFormat = new Schema(
   { timestamps: true }
 );
 
+const ordersFormat = new Schema(
+  {
+    id: {
+      type: String,
+      required: true,
+    },
+    user_id: {
+      type: String,
+      required: true,
+    },
+    code: {
+      type: String,
+      required: true,
+    },
+    method: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+    },
+    total: {
+      type: Number,
+    },
+    data: [cartFormat],
+  },
+  { timestamps: true }
+);
+
 module.exports = {
   productFormat: mongoose.model(
     "productFormat",
@@ -106,4 +139,5 @@ module.exports = {
 
   sessionFormat: mongoose.model("sessionFormat", sessionFormat, "session"),
   salesFormat: mongoose.model("salesFormat", salesFormat, "sales"),
+  ordersFormat: mongoose.model("ordersFormat", ordersFormat, "orders"),
 };
