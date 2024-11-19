@@ -2,7 +2,9 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
-const productRoutes = require("./router/routes");
+const shopperRoutes = require("./router/shopperRoutes");
+const userRoutes = require("./router/userRoutes");
+const cashierRoutes = require("./router/cashierRoutes");
 // const pageGutter = require("./pageGutter");
 // const { productFormat, cartFormat } = require("./SchemaModel/schema");
 
@@ -18,7 +20,9 @@ app.use((req, res, next) => {
 });
 
 // routes
-app.use("/api", productRoutes);
+app.use("/api", shopperRoutes);
+app.use("/auth", userRoutes);
+app.use("/cashier/api", cashierRoutes);
 
 // connecting to the database
 mongoose
