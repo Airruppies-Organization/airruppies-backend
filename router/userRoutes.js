@@ -6,7 +6,7 @@ router.post("/createuser", createUser);
 router.post("/login", login);
 router.post("/forgotpassword", sendToken);
 router.post("/verifytoken", verifyToken);
-router.post("/resetpassword", resetPassword);
+router.put("/resetpassword", resetPassword);
 
 
 module.exports = router;
