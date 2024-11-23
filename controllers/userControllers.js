@@ -81,4 +81,8 @@ const resetPassword = async(req, res) => {
   }
 };
 
+const googleSignUp = async(req, res) => {
+
+};
+
 module.exports = { createUser, login, sendToken, verifyToken, resetPassword };
