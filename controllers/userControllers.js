@@ -5,7 +5,7 @@ const otp = require("../lib/otp");
 const redisClient = require("../lib/redis");
 
 const createToken = (_id) => {
-  const token = jwt.sign({ _id }, process.env.JWT_SECRET, { expiresIn: "3d" });
+  const token = jwt.sign({ _id }, process.env.JWT_SECRET, { expiresIn: "2d" });
   return token;
 };
 
