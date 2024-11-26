@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const shopperRoutes = require("./router/shopperRoutes");
 const userRoutes = require("./router/userRoutes");
-const cashierRoutes = require("./router/cashierRoutes");
+const merchantRoutes = require("./router/merchantRoutes");
 // const pageGutter = require("./pageGutter");
 // const { productFormat, cartFormat } = require("./SchemaModel/schema");
 
@@ -22,7 +22,7 @@ app.use((req, res, next) => {
 // routes
 app.use("/api", shopperRoutes);
 app.use("/auth", userRoutes);
-app.use("/cashier/api", cashierRoutes);
+app.use("/merchant/api", merchantRoutes);
 
 // connecting to the database
 mongoose
