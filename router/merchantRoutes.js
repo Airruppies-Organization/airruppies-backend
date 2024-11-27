@@ -5,6 +5,31 @@ const {
   salesFormat,
   dashboardFormat,
 } = require("../schema/schema");
+const adminRequireAuth = require("../middleware/adminRequireAuth");
+const Merchant = require("../schema/merchantSchema");
+
+router.use(adminRequireAuth);
+
+// add merchant
+router.post("/onboard", async (req, res) => {
+  const { name, state, address, logo } = req.body;
+
+  const admin_id = req.admin._id;
+
+  try {
+    const merchant = await Merchant.onboard(
+      name,
+      state,
+      address,
+      logo,
+      admin_id
+    );
+
+    res.status(200).json({ merchant });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 router.get("/sessionData", async (req, res) => {
   // come back to this
