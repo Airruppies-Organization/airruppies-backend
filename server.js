@@ -5,6 +5,7 @@ const cors = require("cors");
 const shopperRoutes = require("./router/shopperRoutes");
 const userRoutes = require("./router/userRoutes");
 const merchantRoutes = require("./router/merchantRoutes");
+const adminRoutes = require("./router/adminRoutes");
 // const pageGutter = require("./pageGutter");
 // const { productFormat, cartFormat } = require("./SchemaModel/schema");
 
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 // routes
 app.use("/api", shopperRoutes);
 app.use("/auth", userRoutes);
+app.use("/merchant/admin/auth", adminRoutes);
 app.use("/merchant/api", merchantRoutes);
 
 // connecting to the database
