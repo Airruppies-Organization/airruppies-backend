@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
+const { dashboardFormat } = require("./schema");
 
 // Import the Admin model AFTER the schema definition if needed
 // const Admin = require("./adminSchema"); // Ensure this import is correct and the file exists
@@ -25,6 +26,7 @@ const merchantFormat = new Schema(
       type: String,
       required: true,
     },
+
     admins: [String], // Array of admin IDs
   },
   { timestamps: true }
@@ -37,34 +39,76 @@ merchantFormat.statics.onboard = async function (
   logo,
   admin_id
 ) {
-  // Ensure the admin_id is a valid ObjectId and the fields are filled
-  if (!name || !state || !address || !logo) {
-    throw new Error("All fields must be filled");
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Validate input
+    if (!name || !state || !address || !logo) {
+      throw new Error("All fields must be filled");
+    }
+    if (!mongoose.Types.ObjectId.isValid(admin_id)) {
+      throw new Error("Invalid admin ID");
+    }
+
+    const Admin = mongoose.model("Admin");
+
+    // Check if admin exists
+    const admin = await Admin.findById(admin_id).session(session);
+    if (!admin) {
+      throw new Error("Admin not found");
+    }
+
+    // Create a new merchant
+    const [merchant] = await this.create(
+      [
+        {
+          name,
+          state,
+          address,
+          logo,
+          admins: [admin_id], // Start with the initial admin
+        },
+      ],
+      { session }
+    );
+
+    // Update the admin with the new merchant_id
+    if (!admin.merchant_id) {
+      admin.merchant_id = merchant._id;
+      await admin.save({ session });
+    }
+
+    await dashboardFormat.create(
+      [
+        {
+          totalSales: 0,
+          totalMonthlySales: 0,
+          totalMonthlyTrans: 0,
+          totalTrans: 0,
+          monthlySales: [],
+          monthlyTrans: [],
+          merchant_id: merchant._id,
+        },
+      ],
+
+      { session }
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return merchant;
+  } catch (error) {
+    // Rollback the transaction on failure
+    await session.abortTransaction();
+    session.endSession();
+
+    // Log and rethrow the error
+    console.error("Error onboarding merchant:", error);
+    throw error;
   }
-
-  // Create a new merchant document
-  const merchant = await this.create({
-    name,
-    state,
-    address,
-    logo,
-    admins: [admin_id], // Start with the initial admin
-  });
-
-  const Admin = mongoose.model("Admin");
-
-  // Ensure the admin exists before linking
-  const admin = await Admin.findById(admin_id);
-
-  if (admin) {
-    // Update the admin document with the new merchant_id
-    admin.merchant_id = merchant._id;
-    await admin.save();
-  } else {
-    throw new Error("Admin not found");
-  }
-
-  return merchant;
 };
 
 module.exports = mongoose.model("Merchant", merchantFormat, "merchants");

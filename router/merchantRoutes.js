@@ -156,24 +156,22 @@ router.get("/allTimeSales", async (req, res) => {
 });
 
 router.get("/salesData", async (req, res) => {
+  const merchant_id = req.admin.merchant_id;
   try {
-    const data = await salesFormat.find({});
+    const data = await salesFormat.find({ merchant_id });
     res.status(200).json(data);
   } catch (err) {
     res.status(400).json({ err: err.message });
   }
 });
 
-router.get("/dashboard/:_id", async (req, res) => {
-  const { _id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
-  }
+// handled
+router.get("/dashboard", async (req, res) => {
+  const merchant_id = req.admin.merchant_id;
 
   try {
-    const data = await dashboardFormat.findById(_id);
-
+    const data = await dashboardFormat.findOne(merchant_id);
+    console.log(data);
     res.status(200).json(data);
   } catch (err) {
     res.status(400).json({ error: err.message });
