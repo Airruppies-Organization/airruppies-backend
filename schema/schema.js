@@ -145,6 +145,7 @@ const sales = new Schema({
 
 // merchant
 const dashboardFormat = new Schema({
+  merchant_id: { type: String, required: true },
   totalSales: { type: Number },
   totalMonthlySales: { type: Number },
   totalMonthlyTrans: { type: Number },
