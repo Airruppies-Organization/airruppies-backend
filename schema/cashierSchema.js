@@ -75,16 +75,12 @@ cashierFormat.statics.login = async function (badge_id, password) {
     throw new Error("Please fill all fields");
   }
 
-  if (!validator.isEmail(email)) {
-    throw new Error("invalid email");
-  }
-
   const cashier = await this.findOne({ badge_id });
   if (!cashier) {
     throw new Error("invalid email or password combination");
   }
 
-  const decod_password = await bcrypt.compare(password, admin.password);
+  const decod_password = await bcrypt.compare(password, cashier.password);
 
   if (!decod_password) {
     throw new Error("invalid email or password combination");
@@ -98,6 +94,22 @@ cashierFormat.statics.login = async function (badge_id, password) {
   //       );
   //     }
   //   }
+
+  return cashier;
+};
+
+cashierFormat.statics.updatePassword = async function (badge_id, password) {
+  if (!badge_id || !password) throw new Error("Please fill all fields");
+
+  const cashier = await this.findOne({ badge_id });
+  if (!cashier) throw new Error("No cashier with this badge_id");
+  if (cashier.password) throw new Error("Password exists for this badge_id");
+
+  const salt = await bcrypt.genSalt(10);
+  const hash_password = await bcrypt.hash(password, salt);
+
+  cashier.password = hash_password;
+  await cashier.save();
 
   return cashier;
 };

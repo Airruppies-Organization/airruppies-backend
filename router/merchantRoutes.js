@@ -73,50 +73,6 @@ router.get("/getCashiers", async (req, res) => {
   }
 });
 
-router.get("/sessionData", async (req, res) => {
-  // come back to this
-  try {
-    const { code } = req.query;
-
-    const result = await sessionFormat.findOne({ code });
-
-    if (!result) {
-      return res.status(404).json({ message: "Invalid code" });
-    }
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-router.post("/salesData", async (req, res) => {
-  const {
-    id,
-    code,
-    method,
-    status,
-    total,
-    data,
-    sessionFormat: format,
-  } = req.body;
-
-  try {
-    const result = await salesFormat.create({
-      id,
-      code,
-      method,
-      status,
-      total,
-      data,
-      format,
-    });
-
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(400).json({ err: err.message });
-  }
-});
-
 router.get("/allTimeSales", async (req, res) => {
   const getTimeRange = (range) => {
     let startTime = new Date(); // Start from the current time
@@ -243,25 +199,25 @@ router.post("/dashboard", async (req, res) => {
   }
 });
 
-router.patch("/dashboard/:_id", async (req, res) => {
-  const { _id } = req.params; // Get the user ID from the URL
-  const updates = req.body; // Get the updated fields from the request body
+// router.patch("/dashboard/:_id", async (req, res) => {
+//   const { _id } = req.params; // Get the user ID from the URL
+//   const updates = req.body; // Get the updated fields from the request body
 
-  try {
-    // Find the user by ID and apply the updates
-    const dashboard = await dashboardFormat.findByIdAndUpdate(_id, updates, {
-      new: true,
-    });
+//   try {
+//     // Find the user by ID and apply the updates
+//     const dashboard = await dashboardFormat.findByIdAndUpdate(_id, updates, {
+//       new: true,
+//     });
 
-    if (!dashboard) {
-      return res.status(404).json({ message: "Dashboard not found" });
-    }
+//     if (!dashboard) {
+//       return res.status(404).json({ message: "Dashboard not found" });
+//     }
 
-    // Return the updated user
-    res.status(200).json(dashboard);
-  } catch (err) {
-    res.status(400).json({ message: "Error updating user", error: err });
-  }
-});
+//     // Return the updated user
+//     res.status(200).json(dashboard);
+//   } catch (err) {
+//     res.status(400).json({ message: "Error updating user", error: err });
+//   }
+// });
 
 module.exports = router;

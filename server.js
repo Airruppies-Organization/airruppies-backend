@@ -5,7 +5,8 @@ const cors = require("cors");
 const shopperRoutes = require("./router/shopperRoutes");
 const userRoutes = require("./router/userRoutes");
 const merchantRoutes = require("./router/merchantRoutes");
-const adminRoutes = require("./router/adminRoutes");
+const adminRoutes = require("./router/adminAuthRoute");
+const cashierAuthRoutes = require("./router/cashierAuthRoute");
 const cashierRoutes = require("./router/cashierRoute");
 // const pageGutter = require("./pageGutter");
 // const { productFormat, cartFormat } = require("./SchemaModel/schema");
@@ -26,7 +27,8 @@ app.use("/api", shopperRoutes);
 app.use("/auth", userRoutes);
 app.use("/merchant/admin/auth", adminRoutes);
 app.use("/merchant/api", merchantRoutes);
-app.use("/merchant/cashier/auth", cashierRoutes);
+app.use("/merchant/cashier/auth", cashierAuthRoutes);
+app.use("/merchant/cashier", cashierRoutes);
 
 // connecting to the database
 mongoose

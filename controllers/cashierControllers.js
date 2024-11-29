@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Cashier = require("../schema/adminSchema");
+const Cashier = require("../schema/cashierSchema");
 const jwt = require("jsonwebtoken");
 const mailer = require("../lib/mailer");
 const otp = require("../lib/otp");
@@ -17,8 +17,21 @@ const createToken = (_id) => {
 
 const login = async (req, res) => {
   const { badge_id, password } = req.body;
+
   try {
     const cashier = await Cashier.login(badge_id, password);
+    const token = createToken(cashier._id);
+    res.status(200).json({ badge_id, token }); // supposed to be email, token and an id for that particular business
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const createPassword = async (req, res) => {
+  const { badge_id, password } = req.body;
+
+  try {
+    const cashier = await Cashier.updatePassword(badge_id, password);
     const token = createToken(cashier._id);
     res.status(200).json({ badge_id, token }); // supposed to be email, token and an id for that particular business
   } catch (error) {
@@ -72,5 +85,5 @@ const login = async (req, res) => {
 
 // const googleSignUp = async (req, res) => {};
 
-module.exports = { login };
+module.exports = { login, createPassword };
 // module.exports = { createUser, login, sendToken, verifyToken, resetPassword };
