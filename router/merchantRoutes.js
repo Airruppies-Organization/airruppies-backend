@@ -1,4 +1,5 @@
 const express = require("express");
+const Cashier = require("../schema/cashierSchema");
 const router = express.Router();
 const {
   sessionFormat,
@@ -6,6 +7,7 @@ const {
   dashboardFormat,
 } = require("../schema/schema");
 const adminRequireAuth = require("../middleware/adminRequireAuth");
+// const Cashier = require("../schema/cashierSchema");
 const Merchant = require("../schema/merchantSchema");
 
 router.use(adminRequireAuth);
@@ -26,6 +28,46 @@ router.post("/onboard", async (req, res) => {
     );
 
     res.status(200).json({ merchant });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// add cashier
+router.post("/createCashier", async (req, res) => {
+  const { fullName, email, phoneNumber, badge_id } = req.body;
+  const merchant_id = req.admin.merchant_id;
+
+  try {
+    const result = await Cashier.signup(
+      fullName,
+      email,
+      phoneNumber,
+      badge_id,
+      merchant_id
+    );
+
+    res.status(200).json({
+      fullName: result.fullName,
+      email: result.email,
+      phoneNumber: result.phoneNumber,
+      badge_id: result.badge_id,
+    }); // supposed to be email, token, and an id for that particular business
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// get cashiers
+router.get("/getCashiers", async (req, res) => {
+  try {
+    const merchant_id = req.admin.merchant_id;
+    const cashiers = await Cashier.find({ merchant_id }).select(
+      "fullName email phoneNumber badge_id"
+    );
+
+    res.status(200).json(cashiers);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -170,8 +212,8 @@ router.get("/dashboard", async (req, res) => {
   const merchant_id = req.admin.merchant_id;
 
   try {
-    const data = await dashboardFormat.findOne(merchant_id);
-    console.log(data);
+    const data = await dashboardFormat.findOne({ merchant_id });
+
     res.status(200).json(data);
   } catch (err) {
     res.status(400).json({ error: err.message });

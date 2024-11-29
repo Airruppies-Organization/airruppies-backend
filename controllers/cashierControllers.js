@@ -1,45 +1,26 @@
-const Admin = require("../schema/adminSchema");
+const express = require("express");
+const router = express.Router();
+const Cashier = require("../schema/adminSchema");
 const jwt = require("jsonwebtoken");
 const mailer = require("../lib/mailer");
 const otp = require("../lib/otp");
 const redisClient = require("../lib/redis");
 const mongoose = require("mongoose");
+const adminRequireAuth = require("../middleware/adminRequireAuth");
 
 const createToken = (_id) => {
-  const token = jwt.sign({ _id }, process.env.ADMIN_JWT_SECRET, {
+  const token = jwt.sign({ _id }, process.env.CASHIER_JWT_SECRET, {
     expiresIn: "2d",
   });
   return token;
 };
 
-const createAdmin = async (req, res) => {
-  const { firstName, lastName, email, password, merchant_id } = req.body;
-  try {
-    const admin = await Admin.signup(
-      firstName,
-      lastName,
-      email,
-      password,
-      merchant_id
-    );
-
-    const token = createToken(admin._id);
-    const hasMerch = admin.merchant_id ? true : false;
-    res.status(200).json({ email, token, hasMerch }); // supposed to be email, token, and an id for that particular business
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { badge_id, password } = req.body;
   try {
-    const admin = await Admin.login(email, password);
-    const token = createToken(admin._id);
-
-    const hasMerch = admin.merchant_id ? true : false;
-
-    res.status(200).json({ email, token, hasMerch }); // supposed to be email, token and an id for that particular business
+    const cashier = await Cashier.login(badge_id, password);
+    const token = createToken(cashier._id);
+    res.status(200).json({ badge_id, token }); // supposed to be email, token and an id for that particular business
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -91,5 +72,5 @@ const login = async (req, res) => {
 
 // const googleSignUp = async (req, res) => {};
 
-module.exports = { createAdmin, login };
+module.exports = { login };
 // module.exports = { createUser, login, sendToken, verifyToken, resetPassword };
