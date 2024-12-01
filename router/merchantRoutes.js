@@ -1,5 +1,6 @@
 const express = require("express");
 const Cashier = require("../schema/cashierSchema");
+const bcrypt = require("bcrypt");
 const router = express.Router();
 const {
   sessionFormat,
@@ -74,6 +75,7 @@ router.get("/getCashiers", async (req, res) => {
 });
 
 router.get("/allTimeSales", async (req, res) => {
+  // const merchant_id = req.admin.merchant_id;
   const getTimeRange = (range) => {
     let startTime = new Date(); // Start from the current time
 
@@ -105,6 +107,7 @@ router.get("/allTimeSales", async (req, res) => {
     const sales = await salesFormat.aggregate([
       {
         $match: {
+          // merchant_id,
           createdAt: { $gte: startTime },
         },
       },
@@ -150,6 +153,19 @@ router.get("/allTimeSales", async (req, res) => {
     res.status(200).json({ sales });
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+router.get("/getHash", async (req, res) => {
+  const merchant_id = req.admin.merchant_id;
+  try {
+    const salt = await bcrypt.genSalt(10);
+
+    const hash = await bcrypt.hash(merchant_id, salt);
+
+    res.json({ merch_id: hash });
+  } catch (err) {
+    res.status(500).json({ error: "An error occurred while hashing" });
   }
 });
 

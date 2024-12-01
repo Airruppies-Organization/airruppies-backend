@@ -13,7 +13,10 @@ const adminRequireAuth = async (req, res, next) => {
 
   try {
     const { _id } = jwt.verify(token, process.env.ADMIN_JWT_SECRET);
-    req.admin = await Admin.findById({ _id }).select("merchant_id"); // it is this id that we will use for datafetching
+    if (!_id) {
+      res.status(400).json({ error: "Token already expired" });
+    }
+    req.admin = await Admin.findById(_id).select("merchant_id"); // it is this id that we will use for datafetching
 
     next();
   } catch (error) {

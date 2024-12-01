@@ -5,11 +5,12 @@ const router = express.Router();
 router.use(cashierRequireAuth);
 
 router.get("/sessionData", async (req, res) => {
+  const merchant_id = cashier.merchant_id;
   // come back to this
   try {
     const { code } = req.query;
 
-    const result = await sessionFormat.findOne({ code });
+    const result = await sessionFormat.findOne({ code, merchant_id });
 
     if (!result) {
       return res.status(404).json({ message: "Invalid code" });
@@ -21,15 +22,9 @@ router.get("/sessionData", async (req, res) => {
 });
 
 router.post("/salesData", async (req, res) => {
-  const {
-    id,
-    code,
-    method,
-    status,
-    total,
-    data,
-    sessionFormat: format,
-  } = req.body;
+  const merchant_id = cashier.merchant_id;
+
+  const { id, code, method, status, total, data } = req.body;
 
   try {
     const result = await salesFormat.create({
@@ -39,7 +34,7 @@ router.post("/salesData", async (req, res) => {
       status,
       total,
       data,
-      format,
+      merchant_id,
     });
 
     res.status(200).json(result);
