@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
+// shopper
 const productFormat = new Schema(
   {
     name: {
@@ -34,6 +35,7 @@ const productFormat = new Schema(
   { timestamps: true }
 );
 
+// shopper
 const cartFormat = new Schema(
   {
     price: {
@@ -53,53 +55,7 @@ const cartFormat = new Schema(
   { timestamps: true }
 );
 
-const sessionFormat = new Schema(
-  {
-    id: {
-      type: String,
-      required: true,
-    },
-    code: {
-      type: String,
-      required: true,
-    },
-    method: {
-      type: String,
-      required: true,
-    },
-    status: {
-      type: String,
-    },
-    data: [cartFormat],
-  },
-  { timestamps: true }
-);
-
-const salesFormat = new Schema(
-  {
-    id: {
-      type: String,
-      required: true,
-    },
-    code: {
-      type: String,
-      required: true,
-    },
-    method: {
-      type: String,
-      required: true,
-    },
-    status: {
-      type: String,
-    },
-    total: {
-      type: Number,
-    },
-    data: [cartFormat],
-  },
-  { timestamps: true }
-);
-
+// shopper
 const ordersFormat = new Schema(
   {
     id: {
@@ -129,6 +85,75 @@ const ordersFormat = new Schema(
   { timestamps: true }
 );
 
+//shopper and merchant > cashier
+const sessionFormat = new Schema(
+  {
+    id: {
+      type: String,
+      required: true,
+    },
+    code: {
+      type: String,
+      required: true,
+    },
+    method: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+    },
+    data: [cartFormat],
+  },
+  { timestamps: true }
+);
+
+//merchant
+const salesFormat = new Schema(
+  {
+    id: {
+      type: String,
+      required: true,
+    },
+    code: {
+      type: String,
+      required: true,
+    },
+    method: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+    },
+    total: {
+      type: Number,
+    },
+    data: [cartFormat],
+  },
+  { timestamps: true }
+);
+
+const transactions = new Schema({
+  total: { type: Number, default: 0 },
+  day: { type: String },
+});
+const sales = new Schema({
+  total: { type: Number, default: 0 },
+  month: { type: String },
+});
+
+// merchant
+const dashboardFormat = new Schema({
+  merchant_id: { type: String, required: true },
+  totalSales: { type: Number },
+  totalMonthlySales: { type: Number },
+  totalMonthlyTrans: { type: Number },
+  totalTrans: { type: Number },
+  sales: [sales],
+  transactions: [transactions],
+});
+
 module.exports = {
   productFormat: mongoose.model(
     "productFormat",
@@ -140,4 +165,9 @@ module.exports = {
   sessionFormat: mongoose.model("sessionFormat", sessionFormat, "session"),
   salesFormat: mongoose.model("salesFormat", salesFormat, "sales"),
   ordersFormat: mongoose.model("ordersFormat", ordersFormat, "orders"),
+  dashboardFormat: mongoose.model(
+    "dashboardFormat",
+    dashboardFormat,
+    "dashboards"
+  ),
 };

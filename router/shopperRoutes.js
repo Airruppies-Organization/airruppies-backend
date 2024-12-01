@@ -1,4 +1,5 @@
 const express = require("express");
+const { getAllMerchants } = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
@@ -16,6 +17,16 @@ router.use(requireAuth);
 
 //Routes
 
+router.get("/verifyToken", async (req, res) => {
+  const user_id = req.user._id;
+
+  if (user_id) {
+    res.status(200).send("Valid token");
+  } else {
+    res.status(400).send("Expired token");
+  }
+});
+
 // get profile
 router.get("/profile", async (req, res) => {
   const user_id = req.user._id;
@@ -28,11 +39,11 @@ router.get("/profile", async (req, res) => {
   }
 });
 
-// get data
-router.get("/products", async (req, res) => {
-  const products = await productFormat.find({});
-  res.status(200).json(products);
-});
+// // get data
+// router.get("/products", async (req, res) => {
+//   const products = await productFormat.find({});
+//   res.status(200).json(products);
+// });
 
 // find a product
 router.get("/product", async (req, res) => {
@@ -79,7 +90,6 @@ router.post("/cartData", async (req, res) => {
       ean_code,
       id,
       user_id,
-      // format,
     });
     res.status(200).json(cart);
   } catch (err) {
@@ -132,7 +142,7 @@ router.delete("/cartData/:_id", async (req, res) => {
 });
 
 router.post("/sessionData", async (req, res) => {
-  const { id, code, method, status, data, sessionFormat: format } = req.body;
+  const { id, code, method, status, data } = req.body;
   const user_id = req.user._id;
 
   try {
@@ -167,43 +177,6 @@ router.delete("/sessionData", async (req, res) => {
   }
 });
 
-router.post("/salesData", async (req, res) => {
-  const {
-    id,
-    code,
-    method,
-    status,
-    total,
-    data,
-    sessionFormat: format,
-  } = req.body;
-
-  try {
-    const result = await salesFormat.create({
-      id,
-      code,
-      method,
-      status,
-      total,
-      data,
-      format,
-    });
-
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(400).json({ err: err.message });
-  }
-});
-
-router.get("/salesData", async (req, res) => {
-  try {
-    const data = await salesFormat.find({});
-    res.status(200).json(data);
-  } catch (err) {
-    res.status(400).json({ err: err.message });
-  }
-});
-
 router.get("/orders", async (req, res) => {
   const user_id = req.user._id;
   try {
@@ -233,5 +206,7 @@ router.post("/orders", async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+router.get("/merchants", getAllMerchants);
 
 module.exports = router;
