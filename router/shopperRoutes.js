@@ -1,4 +1,5 @@
 const express = require("express");
+const { getAllMerchants } = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
@@ -205,5 +206,7 @@ router.post("/orders", async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+router.get("/merchants", getAllMerchants);
 
 module.exports = router;
