@@ -130,6 +130,16 @@ merchantFormat.statics.onboard = async function (
   }
 };
 
+merchantFormat.statics.getMerchantById = async function (id) {
+  if (!id) throw new Error("Please provide a merchant ID");
+
+  if (!mongoose.Types.ObjectId.isValid(id))
+    throw new Error("Invalid merchant ID");
+
+  const merchant = await this.findById(id);
+  return merchant;
+}
+
 merchantFormat.statics.allMerchants = async function(){
   try {
     const merchants = await this.find({status: true});
