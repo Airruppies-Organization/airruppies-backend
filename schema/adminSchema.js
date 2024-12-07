@@ -111,6 +111,16 @@ adminFormat.statics.login = async function (email, password) {
   return admin;
 };
 
+adminFormat.statics.getAdminByEmail = async function (email) {
+  if (!email) throw new Error("Please provide an email");
+
+  if (!validator.isEmail(email)) throw new Error("Invalid email");
+
+  const admin = await this.findOne({ email});
+
+  return admin; 
+}
+
 // userFormat.statics.getUserByEmail = async function (email) {
 //   if (!email) throw new Error("Please provide an email");
 

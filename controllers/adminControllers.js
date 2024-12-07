@@ -4,6 +4,7 @@ const mailer = require("../lib/mailer");
 const otp = require("../lib/otp");
 const redisClient = require("../lib/redis");
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const createToken = (_id) => {
   const token = jwt.sign({ _id }, process.env.ADMIN_JWT_SECRET, {
@@ -44,6 +45,7 @@ const login = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // const sendToken = async (req, res) => {
 //   const { email } = req.body;

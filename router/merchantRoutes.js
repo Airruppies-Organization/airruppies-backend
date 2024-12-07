@@ -1,5 +1,6 @@
 const express = require("express");
 const Cashier = require("../schema/cashierSchema");
+const { inviteNewAdmin, addNewAdmin } = require("../controllers/merchantController");
 const router = express.Router();
 const {
   sessionFormat,
@@ -263,5 +264,12 @@ router.patch("/dashboard/:_id", async (req, res) => {
     res.status(400).json({ message: "Error updating user", error: err });
   }
 });
+
+
+// Invite New Admin
+router.post("/inviteNewAdmin", inviteNewAdmin);
+
+// Add New Admin
+router.post("/addNewAdmin/:encryptedData/:iv", addNewAdmin);
 
 module.exports = router;
