@@ -156,14 +156,6 @@ router.get("/allTimeSales", async (req, res) => {
   }
 });
 
-router.get("/getHash", async (req, res) => {
-  const merchant_id = req.admin.merchant_id;
-  try {
-  } catch (err) {
-    res.status(500).json({ error: "An error occurred while hashing" });
-  }
-});
-
 router.get("/salesData", async (req, res) => {
   const merchant_id = req.admin.merchant_id;
   try {

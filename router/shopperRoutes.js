@@ -3,6 +3,7 @@ const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
 const mongoose = require("mongoose");
+const Merchant = require("../schema/merchantSchema");
 const {
   productFormat,
   cartFormat,
@@ -201,6 +202,49 @@ router.post("/orders", async (req, res) => {
     });
 
     res.status(200).json(addOrders);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get("/fetchMerchants", async (req, res) => {
+  const merchants = {
+    merchants: [
+      {
+        name: "Merchant 1",
+        state: "Lagos",
+        city: "Surulere",
+        address: "Adeniran Ogunsanya St, Surulere, Lagos 101241, Lagos",
+        logo: "logo1.png",
+        admins: ["admin_id"],
+        latitude: 6.494678803696833,
+        longitude: 3.3558995475171507,
+      },
+      {
+        name: "Merchant 2",
+        state: "Lagos",
+        city: "Surulere",
+        address: "230 Adetola St, Ijesha Tedo, Aguda 101241, Lagos",
+        logo: "logo2.png",
+        admins: ["admin_id"],
+        latitude: 6.4847895656961745,
+        longitude: 3.3320387227558332,
+      },
+      {
+        name: "Merchant 3",
+        state: "Lagos",
+        city: "Surulere",
+        address: "Adeniran Ogunsanya St, Surulere, Lagos 101211, Lagos",
+        logo: "logo3.png",
+        admins: ["admin_id"],
+        latitude: 6.490643283502076,
+        longitude: 3.3574483460332027,
+      },
+    ],
+  };
+  try {
+    // const merchants = await Merchant.find({});
+    res.status(200).json(merchants);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
