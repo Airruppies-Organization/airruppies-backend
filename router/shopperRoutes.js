@@ -3,6 +3,9 @@ const { getAllMerchants } = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
+const { profile } = require('../controllers/userControllers');
+const { addToCart, removeFromCart } = require('../controllers/cartController');
+const { createOrder } = require('../controllers/orderController');
 const mongoose = require("mongoose");
 const {
   productFormat,
@@ -28,16 +31,7 @@ router.get("/verifyToken", async (req, res) => {
 });
 
 // get profile
-router.get("/profile", async (req, res) => {
-  const user_id = req.user._id;
-  try {
-    const profile = await User.findById(user_id);
-
-    res.status(200).json(profile);
-  } catch (err) {
-    res.status(400).json({ err: err.message });
-  }
-});
+router.get("/profile", profile);
 
 // // get data
 // router.get("/products", async (req, res) => {
@@ -62,104 +56,11 @@ router.get("/product", async (req, res) => {
   }
 });
 
-// get cart data
-router.get("/cartData", async (req, res) => {
-  const user_id = req.user._id;
-
-  // if (!mongoose.Types.ObjectId.isValid(user_id)) {
-  //   return res.status(400).json({ error: "Invalid user ID" });
-  // }
-  try {
-    const cartData = await cartFormat.find({ user_id });
-    res.status(200).json(cartData);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Server Error");
-  }
-});
-
 // post cart data
-router.post("/cartData", async (req, res) => {
-  const { price, name, quantity, ean_code, id, cartFormat: format } = req.body;
-  const user_id = req.user._id;
-  try {
-    const cart = await cartFormat.create({
-      price,
-      name,
-      quantity,
-      ean_code,
-      id,
-      user_id,
-    });
-    res.status(200).json(cart);
-  } catch (err) {
-    res.status(400).json({ err: err.message });
-  }
-});
-
-// update cart
-// router.patch("/cartData/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const { price, qty } = req.body;
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(404).json({ error: "No such product" });
-//   }
-
-//   try {
-//     // Find and update the document
-//     const product = await cartFormat.findOneAndUpdate(
-//       { _id: id },
-//       { price, qty },
-//       { new: true }
-//     );
-
-//     // If no matching document found
-//     if (!product) {
-//       return res.status(404).json({ error: "Product not found" });
-//     }
-
-//     // Return the updated document
-//     res.status(200).json(product);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
+router.post("/cart", addToCart);
 
 // Delete cart item
-router.delete("/cartData/:_id", async (req, res) => {
-  const { _id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return res.status(404).json({ error: "No such product" });
-  }
-  const product = await cartFormat.findByIdAndDelete(_id);
-  if (!product) {
-    return res.status(404).json({ error: "no such product" });
-  }
-  res.status(200).json(product);
-  console.log("item already deleted");
-});
-
-router.post("/sessionData", async (req, res) => {
-  const { id, code, method, status, data } = req.body;
-  const user_id = req.user._id;
-
-  try {
-    const session = await sessionFormat.create({
-      id,
-      code,
-      method,
-      status,
-      data,
-      user_id,
-      // format,
-    });
-    res.status(200).json(session);
-  } catch (err) {
-    res.status(400).json({ err: err.message });
-  }
-});
+router.delete("/cart/:id", removeFromCart);
 
 router.delete("/sessionData", async (req, res) => {
   try {
@@ -177,15 +78,8 @@ router.delete("/sessionData", async (req, res) => {
   }
 });
 
-router.get("/orders", async (req, res) => {
-  const user_id = req.user._id;
-  try {
-    const data = await ordersFormat.find({ user_id });
-    res.status(200).json(data);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+router.post("/order/create", createOrder);
+
 
 router.post("/orders", async (req, res) => {
   const { id, code, method, status, total, data } = req.body;

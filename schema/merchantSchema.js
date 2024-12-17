@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const validator = require("validator");
 const { dashboardFormat } = require("./schema");
 
 // Import the Admin model AFTER the schema definition if needed
@@ -39,10 +37,15 @@ const merchantFormat = new Schema(
         required: true,
     },
     status: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true
+    },
+    refPrefix: {
+      type: String,
+      default: "ARP"
     },
     admins: [String], // Array of admin IDs
+    paymentTypes: [String], // Array of payment type IDs
   },
   { timestamps: true }
 );
@@ -157,5 +160,32 @@ merchantFormat.statics.allMerchants = async function(){
     throw error;
   }
 };
+
+
+merchantFormat.statics.addPaymentType = async function (merchant_id, paymentTypes) {
+  if (!merchant_id || paymentTypes.length === 0) {
+    throw new Error("Merchant ID and Payment Type ID are required");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
+    throw new Error("Invalid merchant ID");
+  }
+
+  if (!mongoose.Types.Array.isValid(paymentTypes)) {
+    throw new Error("Payment Types must be an array");
+  }
+
+  paymentTypes.forEach((payment) => {
+    if (!mongoose.Types.ObjectId.isValid(payment)) throw new Error("Invalid payment Id");
+  });
+
+  const merchant = await this.findById(merchant_id);
+  if (!merchant) {
+    throw new Error("Merchant not found");
+  }
+  
+  merchant.paymentTypes = paymentTypes;
+  return await merchant.save();
+}
 
 module.exports = mongoose.model("Merchant", merchantFormat, "merchants");

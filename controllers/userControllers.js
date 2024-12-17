@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const mailer = require("../lib/mailer");
 const otp = require("../lib/otp");
 const redisClient = require("../lib/redis");
+const { forever } = require("request");
 
 
 const createToken = (_id) => {
@@ -27,11 +28,82 @@ const login = async (req, res) => {
   try {
     const user = await User.login(email, password);
     const token = createToken(user._id);
-    res.status(200).json({ email, token });
+    const profile = await User.aggregate([
+      {
+        $match: { _id: user._id }
+      },
+      {
+        $project: {
+          password: 0,
+          __v: 0
+        }
+      },
+      {
+        $lookup: {
+          from: "carts",
+          localField: "_id",
+          foreignField: "user_id",
+          as: "cart"
+        }
+      },
+      {
+        $lookup: {
+          from: "orders",
+          localField: "_id",
+          foreignField: "user_id",
+          as: "orders"
+        }
+      }
+    ]).then((response) => {
+      return response[0];
+    }, error => { throw new Error(error) });
+   
+    res.status(200).json({ profile, token });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
+
+const profile = async (req, res) => {
+  const { _id } = req.user;
+  
+  try {
+    const profile = await User.aggregate([
+      {
+        $match: { _id: user._id }
+      },
+      {
+        $project: {
+          password: 0,
+          __v: 0
+        }
+      },
+      {
+        $lookup: {
+          from: "carts",
+          localField: "_id",
+          foreignField: "user_id",
+          as: "cart"
+        }
+      },
+      {
+        $lookup: {
+          from: "orders",
+          localField: "_id",
+          foreignField: "user_id",
+          as: "orders"
+        }
+      }
+    ]).then((response) => {
+      return response[0];
+    }, error => { throw new Error(error) });
+  
+    res.status(200).json({ profile});
+
+  }catch(Error) {
+    res.status(400).json({ error: error.message });
+  }
+}
 
 const sendToken = async(req, res) => {
   const { email } = req.body;
@@ -111,4 +183,4 @@ const googleSignIn = async (req, res) => {
   }
 };
 
-module.exports = { createUser, login, sendToken, verifyToken, resetPassword, googleAuthenticate, googleSignIn };
+module.exports = { createUser, login, sendToken, verifyToken, resetPassword, googleAuthenticate, googleSignIn, profile };

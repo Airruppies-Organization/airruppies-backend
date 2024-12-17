@@ -7,6 +7,9 @@ const otp = require("../lib/otp");
 const redisClient = require("../lib/redis");
 const mongoose = require("mongoose");
 const adminRequireAuth = require("../middleware/adminRequireAuth");
+const Order = require("../schema/orderSchema");
+const Session = require("../schema/sessionSchema");
+
 
 const createToken = (_id) => {
   const token = jwt.sign({ _id }, process.env.CASHIER_JWT_SECRET, {
@@ -25,6 +28,35 @@ const login = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+const getBill = async (req, res) => {
+  const { merchant_id, bill_code } = req.body;
+
+  try{
+      const bills = await Session.aggregate([
+          {
+              $match: { bill_code, merchant_id }
+          },
+          {
+              $lookup: {
+                  from: "bills",
+                  localField: "bill_code",
+                  foreignField: "bill_code",
+                  as: "bills"
+              }
+          }
+      ])
+      .then((response)=>{
+          response[0].orders = response[0].orders.map(async (order) => {
+              return await Order.find({_id: order});
+          });
+      }, error => {throw new Error(error)});
+
+      res.status(200).json(bills);
+  }catch(error){
+      res.status(400).json({ error: error.message });
+  }
+}
 
 // const sendToken = async (req, res) => {
 //   const { email } = req.body;
@@ -72,5 +104,5 @@ const login = async (req, res) => {
 
 // const googleSignUp = async (req, res) => {};
 
-module.exports = { login };
+module.exports = { login, getBill };
 // module.exports = { createUser, login, sendToken, verifyToken, resetPassword };
