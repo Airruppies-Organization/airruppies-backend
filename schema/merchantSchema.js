@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const { dashboardFormat } = require("./schema");
+const encrypter = require("../lib/encrypt");
 
 // Import the Admin model AFTER the schema definition if needed
 // const Admin = require("./adminSchema"); // Ensure this import is correct and the file exists
@@ -13,10 +14,6 @@ const merchantFormat = new Schema(
     name: {
       type: String,
       required: true,
-    },
-    city: {
-        type: String,
-        required: true,
     },
     state: {
       type: String,
@@ -31,16 +28,22 @@ const merchantFormat = new Schema(
       required: true,
     },
     lng: {
-        type: String,
-        required: true,
+      type: Number,
+      required: true,
     },
     lat: {
-        type: String,
-        required: true,
+      type: Number,
+      required: true,
     },
     status: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true,
+    },
+    encryptedMerchId: {
+      type: {
+        encryptedData: { type: String },
+        iv: { type: String },
+      },
     },
     admins: [String], // Array of admin IDs
   },
@@ -86,12 +89,17 @@ merchantFormat.statics.onboard = async function (
           logo,
           admins: [admin_id], // Start with the initial admin
           lat,
-          lng
+          lng,
+          encryptedMerchId: {},
         },
       ],
       { session }
     );
 
+    const merchantIdString = merchant._id.toString();
+    const encrypted = encrypter.encrypt(merchantIdString);
+    merchant.encryptedMerchId = encrypted;
+    await merchant.save({ session });
     // Update the admin with the new merchant_id
     if (!admin.merchant_id) {
       admin.merchant_id = merchant._id;
@@ -138,12 +146,12 @@ merchantFormat.statics.getMerchantById = async function (id) {
 
   const merchant = await this.findById(id);
   return merchant;
-}
+};
 
-merchantFormat.statics.allMerchants = async function(){
+merchantFormat.statics.allMerchants = async function () {
   try {
-    const merchants = await this.find({status: true});
-    return merchants.map(merchant => {
+    const merchants = await this.find({ status: true });
+    return merchants.map((merchant) => {
       return {
         id: merchant._id,
         name: merchant.name,

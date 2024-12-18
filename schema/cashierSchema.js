@@ -102,32 +102,27 @@ cashierFormat.statics.login = async function (badge_id, password) {
   return cashier;
 };
 
-// userFormat.statics.getUserByEmail = async function (email) {
-//   if (!email) throw new Error("Please provide an email");
+cashierFormat.statics.setPassword = async function (badge_id, password) {
+  if (!badge_id || !password) {
+    throw new Error("All fields required");
+  }
 
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
+  const cashier = await this.findOne({ badge_id });
+  if (!cashier) {
+    throw new Error("No cashier with this badge ID");
+  }
 
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
+  if (cashier.password) {
+    throw new Error("You already have a password");
+  }
 
-//   return user;
-// };
+  const salt = await bcrypt.genSalt(10);
+  const hash_password = await bcrypt.hash(password, salt);
 
-// userFormat.statics.updatePassword = async function (email, password) {
-//   if (!email || !password) throw new Error("Please provide email and password");
+  cashier.password = hash_password;
+  await cashier.save();
 
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
-
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
-
-//   const salt = await bcrypt.genSalt(10);
-//   const hash_password = await bcrypt.hash(password, salt);
-
-//   user.password = hash_password;
-//   await user.save();
-
-//   return user;
-// };
+  return cashier;
+};
 
 module.exports = mongoose.model("Cashier", cashierFormat, "cashier");
