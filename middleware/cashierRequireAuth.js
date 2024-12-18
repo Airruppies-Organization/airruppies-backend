@@ -3,6 +3,7 @@ const Cashier = require("../schema/cashierSchema");
 
 const cashierRequireAuth = async (req, res, next) => {
   // verify authentication
+
   const { authorization } = req.headers;
 
   if (!authorization) {
@@ -13,7 +14,11 @@ const cashierRequireAuth = async (req, res, next) => {
 
   try {
     const { _id } = jwt.verify(token, process.env.CASHIER_JWT_SECRET);
-    req.cashier = await Cashier.findById({ _id }).select("merchant_id"); // it is this id that we will use for datafetching
+
+    req.cashierMerchantID = await Cashier.findById({ _id }).select(
+      "merchant_id"
+    ); // it is this id that we will use for datafetching
+
     next();
   } catch (error) {
     res.status(401).json({ error: "Request is not authorized" });

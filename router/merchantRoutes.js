@@ -1,6 +1,9 @@
 const express = require("express");
 const Cashier = require("../schema/cashierSchema");
-const bcrypt = require("bcrypt");
+const {
+  inviteNewAdmin,
+  addNewAdmin,
+} = require("../controllers/merchantController");
 const router = express.Router();
 const {
   sessionFormat,
@@ -15,7 +18,7 @@ router.use(adminRequireAuth);
 
 // add merchant
 router.post("/onboard", async (req, res) => {
-  const { name, state, address, logo } = req.body;
+  const { name, state, address, logo, lng, lat } = req.body;
 
   const admin_id = req.admin._id;
 
@@ -25,7 +28,9 @@ router.post("/onboard", async (req, res) => {
       state,
       address,
       logo,
-      admin_id
+      admin_id,
+      lng,
+      lat
     );
 
     res.status(200).json({ merchant });
@@ -75,7 +80,6 @@ router.get("/getCashiers", async (req, res) => {
 });
 
 router.get("/allTimeSales", async (req, res) => {
-  // const merchant_id = req.admin.merchant_id;
   const getTimeRange = (range) => {
     let startTime = new Date(); // Start from the current time
 
@@ -107,7 +111,6 @@ router.get("/allTimeSales", async (req, res) => {
     const sales = await salesFormat.aggregate([
       {
         $match: {
-          // merchant_id,
           createdAt: { $gte: startTime },
         },
       },
@@ -184,16 +187,16 @@ router.post("/dashboard", async (req, res) => {
     totalSales,
     totalMonthlySales,
     totalMonthlyTrans,
-    transactions,
-    saies,
+    // transactions,
+    // sales,
   } = req.body;
   try {
     const dashboard = await dashboardFormat.create({
       totalSales,
       totalMonthlySales,
       totalMonthlyTrans,
-      transactions,
-      sales,
+      // transactions,
+      // sales,
     });
 
     res.status(200).json(dashboard);
@@ -222,5 +225,11 @@ router.post("/dashboard", async (req, res) => {
 //     res.status(400).json({ message: "Error updating user", error: err });
 //   }
 // });
+
+// Invite New Admin
+router.post("/inviteNewAdmin", inviteNewAdmin);
+
+// Add New Admin
+router.post("/addNewAdmin/:encryptedData/:iv", addNewAdmin);
 
 module.exports = router;

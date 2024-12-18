@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const { dashboardFormat } = require("./schema");
+const encrypter = require("../lib/encrypt");
 
 // Import the Admin model AFTER the schema definition if needed
 // const Admin = require("./adminSchema"); // Ensure this import is correct and the file exists
@@ -26,7 +27,24 @@ const merchantFormat = new Schema(
       type: String,
       required: true,
     },
-
+    lng: {
+      type: Number,
+      required: true,
+    },
+    lat: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: Boolean,
+      default: true,
+    },
+    encryptedMerchId: {
+      type: {
+        encryptedData: { type: String },
+        iv: { type: String },
+      },
+    },
     admins: [String], // Array of admin IDs
   },
   { timestamps: true }
@@ -37,7 +55,9 @@ merchantFormat.statics.onboard = async function (
   state,
   address,
   logo,
-  admin_id
+  admin_id,
+  lng,
+  lat
 ) {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -68,11 +88,18 @@ merchantFormat.statics.onboard = async function (
           address,
           logo,
           admins: [admin_id], // Start with the initial admin
+          lat,
+          lng,
+          encryptedMerchId: {},
         },
       ],
       { session }
     );
 
+    const merchantIdString = merchant._id.toString();
+    const encrypted = encrypter.encrypt(merchantIdString);
+    merchant.encryptedMerchId = encrypted;
+    await merchant.save({ session });
     // Update the admin with the new merchant_id
     if (!admin.merchant_id) {
       admin.merchant_id = merchant._id;
@@ -107,6 +134,34 @@ merchantFormat.statics.onboard = async function (
 
     // Log and rethrow the error
     console.error("Error onboarding merchant:", error);
+    throw error;
+  }
+};
+
+merchantFormat.statics.getMerchantById = async function (id) {
+  if (!id) throw new Error("Please provide a merchant ID");
+
+  if (!mongoose.Types.ObjectId.isValid(id))
+    throw new Error("Invalid merchant ID");
+
+  const merchant = await this.findById(id);
+  return merchant;
+};
+
+merchantFormat.statics.allMerchants = async function () {
+  try {
+    const merchants = await this.find({ status: true });
+    return merchants.map((merchant) => {
+      return {
+        id: merchant._id,
+        name: merchant.name,
+        address: merchant.address,
+        lng: merchant.lng,
+        lat: merchant.lat,
+      };
+    });
+  } catch (error) {
+    console.error("Error getting all merchants:", error);
     throw error;
   }
 };

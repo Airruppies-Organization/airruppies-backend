@@ -75,12 +75,16 @@ cashierFormat.statics.login = async function (badge_id, password) {
     throw new Error("Please fill all fields");
   }
 
+  if (!validator.isEmail(email)) {
+    throw new Error("invalid email");
+  }
+
   const cashier = await this.findOne({ badge_id });
   if (!cashier) {
     throw new Error("invalid email or password combination");
   }
 
-  const decod_password = await bcrypt.compare(password, cashier.password);
+  const decod_password = await bcrypt.compare(password, admin.password);
 
   if (!decod_password) {
     throw new Error("invalid email or password combination");
@@ -98,12 +102,19 @@ cashierFormat.statics.login = async function (badge_id, password) {
   return cashier;
 };
 
-cashierFormat.statics.updatePassword = async function (badge_id, password) {
-  if (!badge_id || !password) throw new Error("Please fill all fields");
+cashierFormat.statics.setPassword = async function (badge_id, password) {
+  if (!badge_id || !password) {
+    throw new Error("All fields required");
+  }
 
   const cashier = await this.findOne({ badge_id });
-  if (!cashier) throw new Error("No cashier with this badge_id");
-  if (cashier.password) throw new Error("Password exists for this badge_id");
+  if (!cashier) {
+    throw new Error("No cashier with this badge ID");
+  }
+
+  if (cashier.password) {
+    throw new Error("You already have a password");
+  }
 
   const salt = await bcrypt.genSalt(10);
   const hash_password = await bcrypt.hash(password, salt);
@@ -113,33 +124,5 @@ cashierFormat.statics.updatePassword = async function (badge_id, password) {
 
   return cashier;
 };
-
-// userFormat.statics.getUserByEmail = async function (email) {
-//   if (!email) throw new Error("Please provide an email");
-
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
-
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
-
-//   return user;
-// };
-
-// userFormat.statics.updatePassword = async function (email, password) {
-//   if (!email || !password) throw new Error("Please provide email and password");
-
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
-
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
-
-//   const salt = await bcrypt.genSalt(10);
-//   const hash_password = await bcrypt.hash(password, salt);
-
-//   user.password = hash_password;
-//   await user.save();
-
-//   return user;
-// };
 
 module.exports = mongoose.model("Cashier", cashierFormat, "cashier");

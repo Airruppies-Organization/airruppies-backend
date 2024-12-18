@@ -51,6 +51,12 @@ const cartFormat = new Schema(
       type: String,
       required: true,
     },
+    merchant_id: {
+      type: {
+        encryptedId: { type: String },
+        iv: { type: String },
+      },
+    },
   },
   { timestamps: true }
 );
@@ -104,6 +110,13 @@ const sessionFormat = new Schema(
       type: String,
     },
     data: [cartFormat],
+    // merchant_id: {
+    //   type: {
+    //     encryptedData: { type: String },
+    //     iv: { type: String },
+    //   },
+    // },
+    merchant_id: { type: String, required: true },
   },
   { timestamps: true }
 );

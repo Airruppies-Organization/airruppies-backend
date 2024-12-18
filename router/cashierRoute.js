@@ -1,11 +1,13 @@
 const express = require("express");
 const cashierRequireAuth = require("../middleware/cashierRequireAuth");
+const { sessionFormat, salesFormat } = require("../schema/schema");
 const router = express.Router();
 
 router.use(cashierRequireAuth);
 
 router.get("/sessionData", async (req, res) => {
-  const merchant_id = cashier.merchant_id;
+  const merchant_id = req.cashierMerchantID.merchant_id;
+
   // come back to this
   try {
     const { code } = req.query;
@@ -22,7 +24,7 @@ router.get("/sessionData", async (req, res) => {
 });
 
 router.post("/salesData", async (req, res) => {
-  const merchant_id = cashier.merchant_id;
+  const merchant_id = req.cashierMerchantID.merchant_id;
 
   const { id, code, method, status, total, data } = req.body;
 

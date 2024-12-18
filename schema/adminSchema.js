@@ -111,32 +111,4 @@ adminFormat.statics.login = async function (email, password) {
   return admin;
 };
 
-// userFormat.statics.getUserByEmail = async function (email) {
-//   if (!email) throw new Error("Please provide an email");
-
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
-
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
-
-//   return user;
-// };
-
-// userFormat.statics.updatePassword = async function (email, password) {
-//   if (!email || !password) throw new Error("Please provide email and password");
-
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
-
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
-
-//   const salt = await bcrypt.genSalt(10);
-//   const hash_password = await bcrypt.hash(password, salt);
-
-//   user.password = hash_password;
-//   await user.save();
-
-//   return user;
-// };
-
 module.exports = mongoose.model("Admin", adminFormat, "admin");
