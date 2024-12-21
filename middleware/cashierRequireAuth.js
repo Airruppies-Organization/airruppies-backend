@@ -15,9 +15,7 @@ const cashierRequireAuth = async (req, res, next) => {
   try {
     const { _id } = jwt.verify(token, process.env.CASHIER_JWT_SECRET);
 
-    req.cashierMerchantID = await Cashier.findById({ _id }).select(
-      "merchant_id"
-    ); // it is this id that we will use for datafetching
+    req.cashier = await Cashier.findById({ _id }).select("merchant_id"); // it is this id that we will use for datafetching
 
     next();
   } catch (error) {

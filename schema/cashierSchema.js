@@ -75,16 +75,12 @@ cashierFormat.statics.login = async function (badge_id, password) {
     throw new Error("Please fill all fields");
   }
 
-  if (!validator.isEmail(email)) {
-    throw new Error("invalid email");
-  }
-
   const cashier = await this.findOne({ badge_id });
   if (!cashier) {
     throw new Error("invalid email or password combination");
   }
 
-  const decod_password = await bcrypt.compare(password, admin.password);
+  const decod_password = await bcrypt.compare(password, cashier.password);
 
   if (!decod_password) {
     throw new Error("invalid email or password combination");

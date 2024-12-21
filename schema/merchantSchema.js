@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
-const { dashboardFormat } = require("./schema");
 const encrypter = require("../lib/encrypt");
 
 // Import the Admin model AFTER the schema definition if needed
@@ -105,22 +104,6 @@ merchantFormat.statics.onboard = async function (
       admin.merchant_id = merchant._id;
       await admin.save({ session });
     }
-
-    await dashboardFormat.create(
-      [
-        {
-          totalSales: 0,
-          totalMonthlySales: 0,
-          totalMonthlyTrans: 0,
-          totalTrans: 0,
-          monthlySales: [],
-          monthlyTrans: [],
-          merchant_id: merchant._id,
-        },
-      ],
-
-      { session }
-    );
 
     // Commit the transaction
     await session.commitTransaction();

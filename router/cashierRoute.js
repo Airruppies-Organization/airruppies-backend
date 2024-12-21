@@ -6,7 +6,7 @@ const router = express.Router();
 router.use(cashierRequireAuth);
 
 router.get("/sessionData", async (req, res) => {
-  const merchant_id = req.cashierMerchantID.merchant_id;
+  const merchant_id = req.cashier.merchant_id;
 
   // come back to this
   try {
@@ -24,13 +24,12 @@ router.get("/sessionData", async (req, res) => {
 });
 
 router.post("/salesData", async (req, res) => {
-  const merchant_id = req.cashierMerchantID.merchant_id;
+  const merchant_id = req.cashier.merchant_id;
 
-  const { id, code, method, status, total, data } = req.body;
+  const { code, method, status, total, data } = req.body;
 
   try {
     const result = await salesFormat.create({
-      id,
       code,
       method,
       status,
@@ -42,6 +41,27 @@ router.post("/salesData", async (req, res) => {
     res.status(200).json(result);
   } catch (err) {
     res.status(400).json({ err: err.message });
+  }
+});
+
+router.delete("/sessionData", async (req, res) => {
+  const { code } = req.query;
+  const merchant_id = req.cashier.merchant_id;
+
+  try {
+    const deleteItem = await sessionFormat.findOneAndDelete({
+      code,
+      merchant_id,
+    });
+
+    if (!deleteItem) {
+      console.log("No document matched the query.");
+    } else {
+      res.status(200).json({ message: "Session deleted" });
+    }
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    res.status(400).json({ error: error.message });
   }
 });
 
