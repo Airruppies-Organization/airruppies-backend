@@ -70,7 +70,7 @@ const profile = async (req, res) => {
   try {
     const profile = await User.aggregate([
       {
-        $match: { _id: user._id }
+        $match: { _id: _id }
       },
       {
         $project: {
@@ -100,7 +100,7 @@ const profile = async (req, res) => {
   
     res.status(200).json({ profile});
 
-  }catch(Error) {
+  }catch(error) {
     res.status(400).json({ error: error.message });
   }
 }
