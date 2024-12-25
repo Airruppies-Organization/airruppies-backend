@@ -3,7 +3,8 @@ const Merchant = require("../schema/merchantSchema");
 
 
 const addToCart = async (req, res) => {
-    const { user_id, product_code, merchant_id, quantity, product_name, price } = req.body;
+    const { product_code, merchant_id, quantity, product_name, price } = req.body;
+    const {_id } = req.user
 
     try {
 
@@ -11,9 +12,12 @@ const addToCart = async (req, res) => {
 
         if (!merchant) return res.status(400).json({ message: 'Merchant not found' });
 
-        const response = await Cart.addToCart(user_id, product_code, merchant_id, quantity, price, product_name);
+        const response = await Cart.addToCart(_id, product_code, merchant_id, quantity, price, product_name);
         
-        if (response) return res.status(200).json({ message: 'Product added to cart' });
+        if (response) {
+            const cartData = await Cart.getCartItems(_id, merchant_id);
+            return res.status(200).json({ message: 'Product added to cart', cartData });
+        }
 
         return res.status(400).json({ message: 'Try again' });
     } catch (error) {

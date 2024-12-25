@@ -38,6 +38,15 @@ const cartFormat = new Schema(
   { timestamps: true }
 );
 
+
+cartFormat.statics.getCartItems = async function (user_id, merchant_id) {
+  if (!user_id) throw new Error("user id not defined");
+
+  const cartItems = await this.find({user_id, merchant_id, status: 'active'}, { _id: 1, product_name: 1, price: 1, quantity: 1, product_code: 1 });
+
+  return cartItems;
+}
+
 cartFormat.statics.addToCart = async function (
   user_id,
   product_code,
