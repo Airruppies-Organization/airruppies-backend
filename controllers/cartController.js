@@ -27,11 +27,18 @@ const addToCart = async (req, res) => {
 
 const removeFromCart = async (req, res) => {
     const { id } = req.params;
+    const { _id } = req.user;
+    const { merchant_id} = req.body
 
     try {
+        const merchant = await Merchant.getMerchantById(merchant_id);
+        if (!merchant) return res.status(400).json({ message: 'Merchant not found' });
+
         const response = await Cart.removeFromCart(id);
         if (!response) return res.status(400).json({ message: 'Try again' });
-        return res.status(200).json({ message: 'Product removed from cart' });
+
+        const cartData = await Cart.getCartItems(_id, merchant_id);
+        return res.status(200).json({ message: 'Product removed from cart', data: cartData});
     } catch (error) {
         return res.status(400).json({ error: error.message });
     }
