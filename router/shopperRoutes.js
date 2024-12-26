@@ -4,8 +4,8 @@ const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
 const { profile } = require('../controllers/userControllers');
-const { addToCart, removeFromCart } = require('../controllers/cartController');
-const { createOrder } = require('../controllers/orderController');
+const { addToCart, removeFromCart, getCartItems } = require('../controllers/cartController');
+const { createOrder, getPaymentTypes } = require('../controllers/orderController');
 const mongoose = require("mongoose");
 const {
   productFormat,
@@ -14,6 +14,7 @@ const {
   salesFormat,
   ordersFormat,
 } = require("../schema/schema");
+const { createBill } = require("../controllers/billController");
 
 // middleware
 router.use(requireAuth);
@@ -59,6 +60,8 @@ router.get("/product", async (req, res) => {
 // post cart data
 router.post("/cart", addToCart);
 
+router.get("/cart", getCartItems);
+
 // Delete cart item
 router.delete("/cart/:id", removeFromCart);
 
@@ -102,5 +105,11 @@ router.post("/orders", async (req, res) => {
 });
 
 router.get("/merchants", getAllMerchants);
+
+// Get Payment Types
+router.get("/paymentTypes", getPaymentTypes);
+
+// Pay for Products
+router.post("/pay", createBill);
 
 module.exports = router;
