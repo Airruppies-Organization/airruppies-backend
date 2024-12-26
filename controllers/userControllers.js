@@ -70,7 +70,7 @@ const profile = async (req, res) => {
   try {
     const profile = await User.aggregate([
       {
-        $match: { _id: _id }
+        $match: { _id }
       },
       {
         $project: {
@@ -79,24 +79,22 @@ const profile = async (req, res) => {
         }
       },
       {
-        $lookup: {
+        "$lookup": {
           from: "carts",
           localField: "_id",
           foreignField: "user_id",
-          as: "cart"
+          as: "cart_items"
         }
       },
       {
-        $lookup: {
-          from: "orders",
+        "$lookup": {
+          from: "bills",
           localField: "_id",
           foreignField: "user_id",
           as: "orders"
         }
       }
-    ]).then((response) => {
-      return response[0];
-    }, error => { throw new Error(error) });
+    ]);
   
     res.status(200).json({ profile});
 

@@ -7,7 +7,7 @@ const Schema = mongoose.Schema;
 const cartFormat = new Schema(
   {
     user_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
     product_code: {

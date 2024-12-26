@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const billFormat = new Schema(
   {
     user_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
     bill_code : {
@@ -67,7 +67,9 @@ billFormat.statics.createBill = async function (
 
   const bill_code = this.createBillCode();
 
-  const payment = await PaymentType.find({ _id: paymentMethod });
+  const payment = await PaymentType.findOne({ _id: paymentMethod });
+  let paymentStatus = 'unpaid';
+
 
   if (!payment) {
     throw new Error('Payment method not found');
@@ -78,10 +80,7 @@ billFormat.statics.createBill = async function (
   }
 
   if (payment.paymentType.toLowerCase() === 'wallet') {
-    const paymentStatus = 'paid';
-  }
-  else{
-    const paymentStatus = 'unpaid';
+    paymentStatus = 'paid';
   }
 
   const bill = new this({ user_id, bill_code, orders, paymentMethod, price, quantity, merchant_id, paymentStatus });

@@ -13,10 +13,12 @@ const getPaymentTypes = async (req, res) => {
 }
 
 const createOrder = async (req, res) => {
-    const { user_id, product_code, merchant_id, price, quantity } = req.body;
+    const { product_code, merchant_id, price, quantity } = req.body;
+    const { _id } = req.user;
+
 
     try{
-        if (!user_id || !product_code || !merchant_id || !price || !quantity){
+        if (!_id || !product_code || !merchant_id || !price || !quantity){
             throw new Error("all fields not filled");
         }
 
@@ -33,7 +35,7 @@ const createOrder = async (req, res) => {
             throw new Error("invalid quantity");
         }
 
-        const order = await orderSchema.createOrder(user_id, product_code, merchant_id, price, quantity);
+        const order = await orderSchema.createOrder(_id, product_code, merchant_id, price, quantity);
 
         res.status(200).json({ order, message: "order created" });
     }catch(error){

@@ -44,4 +44,20 @@ const removeFromCart = async (req, res) => {
     }
 };
 
-module.exports = { addToCart, removeFromCart };
+const getCartItems = async (req, res) => {
+    const { _id } = req.user;
+    const { merchant_id} = req.body
+
+    try{
+        const merchant = await Merchant.getMerchantById(merchant_id);
+        if (!merchant) return res.status(400).json({ message: 'Merchant not found' });
+
+        const cartData = await Cart.getCartItems(_id, merchant_id);
+        return res.status(200).json({ message: 'All Cart Items', data: cartData});
+
+    }catch(error) {
+        return res.status(400).json({ error: error.message })
+    }
+}
+
+module.exports = { addToCart, removeFromCart, getCartItems };

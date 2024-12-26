@@ -31,5 +31,4 @@ paymentTypeFormat.statics.createPaymentType = async function (
     return payment;
 }
 
-
 module.exports = mongoose.model('PaymentType', paymentTypeFormat, 'paymentTypes');
