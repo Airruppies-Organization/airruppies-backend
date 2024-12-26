@@ -45,7 +45,10 @@ const merchantFormat = new Schema(
       default: "ARP"
     },
     admins: [String], // Array of admin IDs
-    paymentTypes: [String], // Array of payment type IDs
+    paymentTypes: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "PaymentType",
+    }, // Array of payment type IDs
   },
   { timestamps: true }
 );
