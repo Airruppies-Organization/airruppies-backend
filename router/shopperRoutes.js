@@ -1,5 +1,5 @@
 const express = require("express");
-const { getAllMerchants } = require("../controllers/merchantController");
+const { getAllMerchants, getMerchant } = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
@@ -105,6 +105,8 @@ router.post("/orders", async (req, res) => {
 });
 
 router.get("/merchants", getAllMerchants);
+
+router.get("/merchant", getMerchant)
 
 // Get Payment Types
 router.get("/paymentTypes", getPaymentTypes);

@@ -40,6 +40,12 @@ const merchantFormat = new Schema(
       type: Boolean,
       default: true
     },
+    encryptedMerchId: {
+      type: {
+        encryptedData: { type: String },
+        iv: { type: String },
+      },
+    },
     refPrefix: {
       type: String,
       default: "ARP"
@@ -49,6 +55,15 @@ const merchantFormat = new Schema(
       type: [mongoose.Schema.Types.ObjectId],
       ref: "PaymentType",
     }, // Array of payment type IDs
+    api_url: {
+      type: String,
+    },
+    merchant_product_name: {
+      type: String,
+    },
+    merchant_product_price: {
+      type: String,
+    }
   },
   { timestamps: true }
 );
@@ -139,10 +154,13 @@ merchantFormat.statics.onboard = async function (
 merchantFormat.statics.getMerchantById = async function (id) {
   if (!id) throw new Error("Please provide a merchant ID");
 
-  if (!mongoose.Types.ObjectId.isValid(id))
-    throw new Error("Invalid merchant ID");
+  //Find the merchant
+  const merchant = await this.findOne({
+    "encryptedMerchId.encryptedData": id
+  });
 
-  const merchant = await this.findById(id);
+  if (!merchant) throw new Error("Merchant not found");
+
   return merchant;
 }
 
@@ -151,11 +169,11 @@ merchantFormat.statics.allMerchants = async function(){
     const merchants = await this.find({status: true});
     return merchants.map(merchant => {
       return {
-        id: merchant._id,
+        id: merchant.encryptedMerchId.encryptedData,
         name: merchant.name,
         address: merchant.address,
         lng: merchant.lng,
-        lat: merchant.lat,
+        lat: merchant.lat
       };
     });
   } catch (error) {
