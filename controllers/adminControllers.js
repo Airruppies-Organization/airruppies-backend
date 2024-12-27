@@ -47,51 +47,35 @@ const login = async (req, res) => {
 };
 
 
-// const sendToken = async (req, res) => {
-//   const { email } = req.body;
+const sendToken = async (req, res) => {
+  const { email } = req.body;
 
-//   try {
-//     const user = await User.getUserByEmail(email);
-//     if (user) {
-//       const otpcode = otp(7);
-//       console.log(otpcode);
-//       const message = `Please use this OTP ${otpcode} to verify your email`;
-//       redisClient.set(email, otpcode, 3600);
-//       mailer.sendEmail("donotreply", email, message, "Password Reset");
-//       return res.status(200).json({ message: "OTP sent" });
-//     }
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
+  try {
+    const admin = await Admin.getAdminByEmail(email);
+    if (admin) {
+      const otpcode = otp(7);
+      console.log(otpcode);
+      const message = `Please use this OTP ${otpcode} to verify your email`;
+      redisClient.set(email, otpcode, 3600);
+      mailer.sendEmail("donotreply", email, message, "Password Reset");
+      return res.status(200).json({ message: "OTP sent" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
-// const verifyToken = async (req, res) => {
-//   const { email, otpcode } = req.body;
+const resetPassword = async (req, res) => {
+  const { email, password } = req.body;
 
-//   try {
-//     const token = await redisClient.get(email);
-//     if (token === otpcode) {
-//       res.status(200).json({ message: "OTP verified" });
-//     } else {
-//       res.status(400).json({ message: "OTP not verified" });
-//     }
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
-
-// const resetPassword = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const user = await User.updatePassword(email, password);
-//     res.status(200).json({ message: "Password updated" });
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
+  try {
+    const admin = await Admin.updatePassword(email, password);
+    res.status(200).json({ admin, message: "Password updated" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 // const googleSignUp = async (req, res) => {};
 
-module.exports = { createAdmin, login };
-// module.exports = { createUser, login, sendToken, verifyToken, resetPassword };
+module.exports = { createAdmin, login, sendToken, resetPassword };

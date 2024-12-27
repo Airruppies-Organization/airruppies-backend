@@ -121,32 +121,21 @@ adminFormat.statics.getAdminByEmail = async function (email) {
   return admin; 
 }
 
-// userFormat.statics.getUserByEmail = async function (email) {
-//   if (!email) throw new Error("Please provide an email");
+adminFormat.statics.updatePassword = async function (email, password) {
+  if (!email || !password) throw new Error("Please provide email and password");
 
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
+  if (!validator.isEmail(email)) throw new Error("Invalid email");
 
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
+  const admin = await this.findOne({ email });
+  if (!admin) throw new Error("No admin with this email");
 
-//   return user;
-// };
+  const salt = await bcrypt.genSalt(10);
+  const hash_password = await bcrypt.hash(password, salt);
 
-// userFormat.statics.updatePassword = async function (email, password) {
-//   if (!email || !password) throw new Error("Please provide email and password");
+  admin.password = hash_password;
+  await admin.save();
 
-//   if (!validator.isEmail(email)) throw new Error("Invalid email");
-
-//   const user = await this.findOne({ email });
-//   if (!user) throw new Error("No user with this email");
-
-//   const salt = await bcrypt.genSalt(10);
-//   const hash_password = await bcrypt.hash(password, salt);
-
-//   user.password = hash_password;
-//   await user.save();
-
-//   return user;
-// };
+  return admin;
+};
 
 module.exports = mongoose.model("Admin", adminFormat, "admin");
