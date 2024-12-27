@@ -5,13 +5,13 @@ const Order = require('../schema/orderSchema');
 
 
 const createBill = async (req, res) => {
-    const { orders, merchant_id, price, quantity, paymentMethod } = req.body;
+    const { data, merchant_id, price, quantity, paymentMethod } = req.body;
     const { _id } = req.user;
     try{
-        if (!_id || orders.length == 0 || !merchant_id || !price || !quantity || !paymentMethod){
+        if (!_id || data.length == 0 || !merchant_id || !price || !quantity || !paymentMethod){
             throw new Error("all fields not filled");
         }
-        const bill = await Bill.createBill(_id, orders, paymentMethod, price, quantity, merchant_id);
+        const bill = await Bill.createBill(_id, data, paymentMethod, price, quantity, merchant_id);
         await Session.createSession(bill.bill_code, merchant_id);
 
         res.status(200).json({ bill, message: "bill created" });
