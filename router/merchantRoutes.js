@@ -9,7 +9,8 @@ const { inviteNewAdmin,
         getSalesData,
         getDashboard,
         saveDashboard,
-        updateDashboard
+        updateDashboard,
+        configureApiSettings
       } = require("../controllers/merchantController");
 const router = express.Router();
 
@@ -61,5 +62,8 @@ router.post("/inviteNewAdmin", inviteNewAdmin);
 
 // Add New Admin
 router.post("/addNewAdmin/:encryptedData/:iv", addNewAdmin);
+
+router.put("/configureApi", configureApiSettings);
+
 
 module.exports = router;

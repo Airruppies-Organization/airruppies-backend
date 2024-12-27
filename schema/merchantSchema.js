@@ -82,7 +82,7 @@ merchantFormat.statics.onboard = async function (
 
   try {
     // Validate input
-    if (!name || !state || !address || !logo) {
+    if (!name || !state || !address || !logo || !admin_id || !lng || !lat) {
       throw new Error("All fields must be filled");
     }
     if (!mongoose.Types.ObjectId.isValid(admin_id)) {
@@ -208,5 +208,71 @@ merchantFormat.statics.addPaymentType = async function (merchant_id, paymentType
   merchant.paymentTypes = paymentTypes;
   return await merchant.save();
 }
+
+merchantFormat.statics.getPaymentType = async function (merchant_id) {
+  if (!merchant_id) {
+    throw new Error("Merchant ID is required");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
+    throw new Error("Invalid merchant ID");
+  }
+
+  const merchant = await this.findById(merchant_id);
+  if (!merchant) {
+    throw new Error("Merchant not found");
+  }
+
+  const paymentTypes = await mongoose.model("PaymentType").find({
+    _id: { $in: merchant.paymentTypes },
+  });
+
+
+  return paymentTypes;
+}
+
+merchantFormat.statics.updateMerchant = async function (merchant_id, data) {
+  if (!merchant_id || !data) {
+    throw new Error("Merchant ID and data are required");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
+    throw new Error("Invalid merchant ID");
+  }
+
+  const merchant = await this.getMerchantById(merchant_id);
+  if (!merchant) {
+    throw new Error("Merchant not found");
+  }
+
+  Object.keys(data).forEach((key) => {
+    merchant[key] = data[key];
+  });
+
+  return await merchant.save();
+}
+
+merchantFormat.statics.configureApiSettings = async function (merchant_id, merchant_product_name, merchant_product_price, api_url) {
+  if (!merchant_id || !merchant_product_name || !merchant_product_price || !api_url) {
+    throw new Error("Merchant ID, Product Name, Product Price, and API URL are required");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
+    throw new Error("Invalid merchant ID");
+  }
+
+  const merchant = await this.getMerchantById(merchant_id);
+  if (!merchant) {
+    throw new Error("Merchant not found");
+  }
+
+  merchant.merchant_product_name = merchant_product_name;
+  merchant.merchant_product_price = merchant_product_price;
+  merchant.api_url = api_url;
+
+  return await merchant.save();
+
+}
+
 
 module.exports = mongoose.model("Merchant", merchantFormat, "merchants");

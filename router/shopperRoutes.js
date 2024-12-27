@@ -1,11 +1,10 @@
 const express = require("express");
-const { getAllMerchants, getMerchant } = require("../controllers/merchantController");
+const { getAllMerchants, getMerchant, getPaymentTypes } = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
 const { profile } = require('../controllers/userControllers');
 const { addToCart, removeFromCart, getCartItems } = require('../controllers/cartController');
-const { createOrder, getPaymentTypes } = require('../controllers/orderController');
 const mongoose = require("mongoose");
 const {
   productFormat,

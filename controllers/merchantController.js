@@ -21,18 +21,23 @@ const createToken = (_id) => {
 };
 
 const onboard = async (req, res) => {
-  const { name, state, address, logo } = req.body;
+  const { name, state, address, logo, lng, lat, payment_types} = req.body;
 
   const admin_id = req.admin._id;
 
   try {
+
     const merchant = await Merchant.onboard(
       name,
       state,
       address,
       logo,
-      admin_id
+      admin_id,
+      lng,
+      lat
     );
+
+    await Merchant.addPaymentType(merchant._id, payment_types);
 
     res.status(200).json({ merchant });
   } catch (error) {
@@ -340,6 +345,40 @@ const updateDashboard = async (req, res) => {
     }
 };
 
+const getPaymentTypes = async (req, res) => {
+    const {merchant_id} = req.body;
+
+    try{
+        const paymentTypes = await Merchant.getPaymentType(merchant_id);
+        return res.send(200).json({paymentTypes})
+    }catch(error)
+    {
+        return res.send(200).json({error: error.message});
+    }
+};
+
+const configureApiSettings = async (req, res) => {
+    const { merchant_id, product_name, product_price, api_url } = req.body;
+
+    try {
+        const merchant = await Merchant.getMerchantById(merchant_id);
+        if (!merchant) {
+            throw new Error("Merchant not found");
+        }
+
+        const settings = await Merchant.configureApiSettings(
+            merchant_id,
+            product_name,
+            product_price,
+            api_url
+        );
+
+        return res.status(200).json({ settings, message: "API settings configured" });
+    } catch (error) {
+        return res.status(400).json({ error: error.message });
+    }
+};
+
 
 
 module.exports = { 
@@ -355,5 +394,7 @@ module.exports = {
     getSalesData,
     getDashboard,
     saveDashboard,
-    updateDashboard
+    updateDashboard,
+    getPaymentTypes,
+    configureApiSettings
 };

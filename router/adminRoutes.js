@@ -6,8 +6,10 @@ const {
   resetPassword,
 } = require("../controllers/adminControllers");
 const router = express.Router();
+const adminRequireAuth = require("../middleware/adminRequireAuth");
 
-router.post("/createAdmin", createAdmin);
+
+router.post("/createAdmin", adminRequireAuth, createAdmin);
 router.post("/login", login);
 router.post("/forgotpassword", sendToken);
 router.put("/resetpassword", resetPassword);
