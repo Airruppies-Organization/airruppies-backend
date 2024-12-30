@@ -1,21 +1,21 @@
 const express = require("express");
 const Cashier = require("../schema/cashierSchema");
-const { inviteNewAdmin, addNewAdmin } = require("../controllers/merchantController");
-const router = express.Router();
 const {
-  sessionFormat,
-  salesFormat,
-  dashboardFormat,
-} = require("../schema/schema");
+  inviteNewAdmin,
+  addNewAdmin,
+} = require("../controllers/merchantController");
+const router = express.Router();
+const { sessionFormat, salesFormat } = require("../schema/schema");
 const adminRequireAuth = require("../middleware/adminRequireAuth");
 // const Cashier = require("../schema/cashierSchema");
 const Merchant = require("../schema/merchantSchema");
 
+// middleware
 router.use(adminRequireAuth);
 
 // add merchant
 router.post("/onboard", async (req, res) => {
-  const { name, state, address, logo } = req.body;
+  const { name, state, address, logo, lng, lat } = req.body;
 
   const admin_id = req.admin._id;
 
@@ -25,7 +25,9 @@ router.post("/onboard", async (req, res) => {
       state,
       address,
       logo,
-      admin_id
+      admin_id,
+      lng,
+      lat
     );
 
     res.status(200).json({ merchant });
@@ -74,50 +76,6 @@ router.get("/getCashiers", async (req, res) => {
   }
 });
 
-router.get("/sessionData", async (req, res) => {
-  // come back to this
-  try {
-    const { code } = req.query;
-
-    const result = await sessionFormat.findOne({ code });
-
-    if (!result) {
-      return res.status(404).json({ message: "Invalid code" });
-    }
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-router.post("/salesData", async (req, res) => {
-  const {
-    id,
-    code,
-    method,
-    status,
-    total,
-    data,
-    sessionFormat: format,
-  } = req.body;
-
-  try {
-    const result = await salesFormat.create({
-      id,
-      code,
-      method,
-      status,
-      total,
-      data,
-      format,
-    });
-
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(400).json({ err: err.message });
-  }
-});
-
 router.get("/allTimeSales", async (req, res) => {
   const getTimeRange = (range) => {
     let startTime = new Date(); // Start from the current time
@@ -136,7 +94,7 @@ router.get("/allTimeSales", async (req, res) => {
         startTime.setFullYear(startTime.getFullYear() - 1); // Subtract 1 year
         break;
       default:
-        throw new Error("Unsupported time range");
+        throw new Error("Unsupported time range. Use one of: 1D, 5D, 1M, 1Y");
     }
 
     return startTime; // Return the Date object for the query
@@ -144,6 +102,21 @@ router.get("/allTimeSales", async (req, res) => {
 
   try {
     const { range } = req.query;
+
+    // Validate inputs
+    if (!range) {
+      return res
+        .status(400)
+        .json({ message: "Time range (range) is required" });
+    }
+
+    const merchant_id = req.admin?.merchant_id; // Ensure merchant_id exists
+    if (!merchant_id) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Missing merchant_id" });
+    }
+
     const startTime = getTimeRange(range); // Get the start time based on the range
 
     // Query salesFormat to get total sales in 15-minute intervals for the selected time range
@@ -151,6 +124,7 @@ router.get("/allTimeSales", async (req, res) => {
       {
         $match: {
           createdAt: { $gte: startTime },
+          merchant_id: merchant_id, // Match the merchant_id
         },
       },
       {
@@ -194,7 +168,8 @@ router.get("/allTimeSales", async (req, res) => {
     // Send the result back
     res.status(200).json({ sales });
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error("Error in /allTimeSales:", err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -208,63 +183,69 @@ router.get("/salesData", async (req, res) => {
   }
 });
 
-// handled
-router.get("/dashboard", async (req, res) => {
-  const merchant_id = req.admin.merchant_id;
-
+router.get("/sales-summary", async (req, res) => {
   try {
-    const data = await dashboardFormat.findOne({ merchant_id });
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
 
-    res.status(200).json(data);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const result = await salesFormat.aggregate([
+      {
+        $facet: {
+          daily: [
+            {
+              $match: { createdAt: { $gte: startOfDay } },
+            },
+            {
+              $group: {
+                _id: null,
+                totalSales: { $sum: "$total" },
+                transactionCount: { $count: {} },
+              },
+            },
+          ],
+          monthly: [
+            {
+              $match: { createdAt: { $gte: startOfMonth } },
+            },
+            {
+              $group: {
+                _id: null,
+                totalSales: { $sum: "$total" },
+                transactionCount: { $count: {} },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          daily: { $arrayElemAt: ["$daily", 0] },
+          monthly: { $arrayElemAt: ["$monthly", 0] },
+        },
+      },
+    ]);
+
+    const response = {
+      daily: {
+        totalSales: result[0]?.daily?.totalSales || 0,
+        transactionCount: result[0]?.daily?.transactionCount || 0,
+      },
+      monthly: {
+        totalSales: result[0]?.monthly?.totalSales || 0,
+        transactionCount: result[0]?.monthly?.transactionCount || 0,
+      },
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-router.post("/dashboard", async (req, res) => {
-  const {
-    totalSales,
-    totalMonthlySales,
-    totalMonthlyTrans,
-    transactions,
-    saies,
-  } = req.body;
-  try {
-    const dashboard = await dashboardFormat.create({
-      totalSales,
-      totalMonthlySales,
-      totalMonthlyTrans,
-      transactions,
-      sales,
-    });
-
-    res.status(200).json(dashboard);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.patch("/dashboard/:_id", async (req, res) => {
-  const { _id } = req.params; // Get the user ID from the URL
-  const updates = req.body; // Get the updated fields from the request body
-
-  try {
-    // Find the user by ID and apply the updates
-    const dashboard = await dashboardFormat.findByIdAndUpdate(_id, updates, {
-      new: true,
-    });
-
-    if (!dashboard) {
-      return res.status(404).json({ message: "Dashboard not found" });
-    }
-
-    // Return the updated user
-    res.status(200).json(dashboard);
-  } catch (err) {
-    res.status(400).json({ message: "Error updating user", error: err });
-  }
-});
-
 
 // Invite New Admin
 router.post("/inviteNewAdmin", inviteNewAdmin);

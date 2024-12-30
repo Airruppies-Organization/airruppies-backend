@@ -3,6 +3,7 @@ const { getAllMerchants } = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
+const Merchant = require("../schema/merchantSchema");
 const mongoose = require("mongoose");
 const {
   productFormat,
@@ -11,6 +12,7 @@ const {
   salesFormat,
   ordersFormat,
 } = require("../schema/schema");
+const encrypter = require("../lib/encrypt");
 
 // middleware
 router.use(requireAuth);
@@ -80,16 +82,19 @@ router.get("/cartData", async (req, res) => {
 
 // post cart data
 router.post("/cartData", async (req, res) => {
-  const { price, name, quantity, ean_code, id, cartFormat: format } = req.body;
+  const { price, name, quantity, ean_code, merchant_id } = req.body;
+
   const user_id = req.user._id;
+
+  const decryptedMerchId = encrypter.decrypt(merchant_id);
   try {
     const cart = await cartFormat.create({
       price,
       name,
       quantity,
       ean_code,
-      id,
       user_id,
+      merchant_id: decryptedMerchId,
     });
     res.status(200).json(cart);
   } catch (err) {
@@ -127,13 +132,13 @@ router.post("/cartData", async (req, res) => {
 // });
 
 // Delete cart item
-router.delete("/cartData/:_id", async (req, res) => {
-  const { _id } = req.params;
+router.delete("/cartData/:id", async (req, res) => {
+  const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ error: "No such product" });
   }
-  const product = await cartFormat.findByIdAndDelete(_id);
+  const product = await cartFormat.findByIdAndDelete(id);
   if (!product) {
     return res.status(404).json({ error: "no such product" });
   }
@@ -142,19 +147,22 @@ router.delete("/cartData/:_id", async (req, res) => {
 });
 
 router.post("/sessionData", async (req, res) => {
-  const { id, code, method, status, data } = req.body;
+  const { code, method, status, data, merchant_id } = req.body;
+
   const user_id = req.user._id;
+
+  const decryptedMerchId = encrypter.decrypt(merchant_id);
 
   try {
     const session = await sessionFormat.create({
-      id,
       code,
       method,
       status,
       data,
       user_id,
-      // format,
+      merchant_id: decryptedMerchId,
     });
+
     res.status(200).json(session);
   } catch (err) {
     res.status(400).json({ err: err.message });
@@ -207,6 +215,17 @@ router.post("/orders", async (req, res) => {
   }
 });
 
-router.get("/merchants", getAllMerchants);
+// router.get("/merchants", getAllMerchants);
+router.get("/merchants", async (req, res) => {
+  try {
+    const merchants = await Merchant.find({}).select(
+      "name city state address logo lng lat encryptedMerchId"
+    );
+
+    res.status(200).json(merchants);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 module.exports = router;
