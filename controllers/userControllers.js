@@ -55,7 +55,7 @@ const login = async (req, res) => {
         }
       }
     ]).then((response) => {
-      return response[0];
+      return response;
     }, error => { throw new Error(error) });
    
     res.status(200).json({ profile, token });

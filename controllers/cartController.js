@@ -46,7 +46,7 @@ const removeFromCart = async (req, res) => {
 
 const getCartItems = async (req, res) => {
     const { _id } = req.user;
-    const { merchant_id} = req.body
+    const { merchant_id} = req.params
 
     try{
         const merchant = await Merchant.getMerchantById(merchant_id);

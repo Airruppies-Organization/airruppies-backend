@@ -80,7 +80,7 @@ router.delete("/sessionData", async (req, res) => {
   }
 });
 
-router.post("/order/create", createOrder);
+//router.post("/order/create", createOrder);
 
 
 router.post("/orders", async (req, res) => {
