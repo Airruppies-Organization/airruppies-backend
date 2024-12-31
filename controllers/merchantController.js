@@ -55,30 +55,30 @@ const getAllMerchants = async (req, res) => {
 };
 
 const inviteNewAdmin = async (req, res) => {
-    const { email, merchant_id } = req.body;
+  const { email, merchant_id } = req.body;
 
-    try{
-        // Verify the Email
-        const admin = await Admin.getAdminByEmail(email);
-        if(admin){
-            throw new Error('Admin already exists');
-        }
+  try{
+      // Verify the Email
+      const admin = await Admin.getAdminByEmail(email);
+      if(admin){
+        throw new Error('Admin already exists');
+      }
 
-        //Get the Merchant
+      //Get the Merchant
 
-        const merchant = await Merchant.getMerchantById(merchant_id);
+      const merchant = await Merchant.getMerchantById(merchant_id);
 
-        // Invite the Admin
-        const encryptedMerchantId = merchant.encryptMerchId;
-        const message = `You have been invited to be an admin of a merchant. Click on this link to accept the invite: https://localhost:3000/merchant/invite/${encryptedMerchantId.encryptedData}/${encryptedMerchantId.iv}`;
-        mailer.sendEmail('donotreply', email, message, 'Admin Invite');
+      // Invite the Admin
+      const encryptedMerchantId = merchant.encryptMerchId;
+      const message = `You have been invited to be an admin of a merchant. Click on this link to accept the invite: https://localhost:3000/merchant/invite/${encryptedMerchantId.encryptedData}/${encryptedMerchantId.iv}`;
+      mailer.sendEmail('donotreply', email, message, 'Admin Invite');
 
-        return res.status(200).json({ message: 'Admin invited' });
-    }catch(error){
-        return res.status(400).json({ error: error.message });
-    }
+      return res.status(200).json({ message: 'Admin invited' });
+  }catch(error){
+      return res.status(400).json({ error: error.message });
+  }
 };
-  
+
 const addNewAdmin = async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     const { encryptedData, iv } = req.params;
@@ -380,21 +380,20 @@ const configureApiSettings = async (req, res) => {
 };
 
 
-
 module.exports = { 
-    getAllMerchants,
-    inviteNewAdmin, 
-    addNewAdmin, 
-    getMerchant,
-    onboard,
-    createCashier,
-    getCashiers,
-    salesData,
-    allTimeSales,
-    getSalesData,
-    getDashboard,
-    saveDashboard,
-    updateDashboard,
-    getPaymentTypes,
-    configureApiSettings
+  getAllMerchants,
+  inviteNewAdmin, 
+  addNewAdmin, 
+  getMerchant,
+  onboard,
+  createCashier,
+  getCashiers,
+  salesData,
+  allTimeSales,
+  getSalesData,
+  getDashboard,
+  saveDashboard,
+  updateDashboard,
+  getPaymentTypes,
+  configureApiSettings
 };
