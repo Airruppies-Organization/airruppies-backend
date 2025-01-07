@@ -1,19 +1,18 @@
 const express = require("express");
-const { getAllMerchants, getMerchant, getPaymentTypes } = require("../controllers/merchantController");
+const { getAllMerchants, getMerchant} = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
-const { profile } = require('../controllers/userControllers');
+const { profile, paymentTypes } = require('../controllers/userControllers');
 const { addToCart, removeFromCart, getCartItems } = require('../controllers/cartController');
-const mongoose = require("mongoose");
+const Merchant = require("../schema/merchantSchema");
 const {
   productFormat,
-  cartFormat,
   sessionFormat,
-  salesFormat,
   ordersFormat,
 } = require("../schema/schema");
 const { createBill } = require("../controllers/billController");
+const encrypter = require("../lib/encrypt");
 
 // middleware
 router.use(requireAuth);
@@ -103,12 +102,23 @@ router.post("/orders", async (req, res) => {
   }
 });
 
-router.get("/merchants", getAllMerchants);
+// router.get("/merchants", getAllMerchants);
+router.get("/merchants", async (req, res) => {
+  try {
+    const merchants = await Merchant.find({}).select(
+      "name city state address logo lng lat encryptedMerchId"
+    );
+
+    res.status(200).json(merchants);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 router.get("/merchant", getMerchant)
 
 // Get Payment Types
-router.get("/paymentTypes", getPaymentTypes);
+router.get("/paymentTypes", paymentTypes);
 
 // Pay for Products
 router.post("/pay", createBill);

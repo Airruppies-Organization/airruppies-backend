@@ -4,6 +4,7 @@ const Admin = require("../schema/adminSchema");
 const mailer = require("../lib/mailer");
 const jwt = require("jsonwebtoken");
 const Cashier = require("../schema/cashierSchema");
+const paymentType = require("../schema/paymentTypeSchema");
 
 const {
     salesFormat,
@@ -122,7 +123,7 @@ const addNewAdmin = async (req, res) => {
 };
 
 const getMerchant = async (req, res) => {
-    const { merchant_id } = req.body;
+    const { merchant_id } = req.params;
 
     try {
         const merchant = await Merchant.getMerchantById(merchant_id);
@@ -346,19 +347,22 @@ const updateDashboard = async (req, res) => {
 };
 
 const getPaymentTypes = async (req, res) => {
-    const {merchant_id} = req.body;
+    const {merchant_id} = req.admin;
 
     try{
-        const paymentTypes = await Merchant.getPaymentType(merchant_id);
-        return res.send(200).json({paymentTypes})
+
+      const paymentTypes = await paymentType.find();
+      const merchantPaymentTypes = await Merchant.getPaymentType(merchant_id);
+      return res.status(200).json({ merchantPaymentTypes, paymentTypes});
     }catch(error)
     {
-        return res.send(200).json({error: error.message});
+      return res.status(400).json({error: error.message});
     }
 };
 
 const configureApiSettings = async (req, res) => {
-    const { merchant_id, product_name, product_price, api_url } = req.body;
+    const { merchant_id } = req.admin;
+    const { product_name, product_price, api_url } = req.body;
 
     try {
         const merchant = await Merchant.getMerchantById(merchant_id);
@@ -379,6 +383,24 @@ const configureApiSettings = async (req, res) => {
     }
 };
 
+const setMerchantPaymentSettings = async (req, res) => {
+  const { merchant_id } = req.admin;
+
+  try{
+    const merchant = await Merchant.getMerchantById(merchant_id);
+    if (!merchant){
+      throw new Error("Merchant not found");
+    }
+
+    const paymentTypes = req.body.paymentTypes;
+    const merchantPayment = await Merchant.addPaymentType(merchant_id, paymentTypes);
+
+    return res.status(200).json({ message: "Payment settings configured",  merchantPayment});
+  }catch(error){
+    return res.status(400).json({ error: error.message });
+  }
+};
+
 
 module.exports = { 
   getAllMerchants,
@@ -395,5 +417,6 @@ module.exports = {
   saveDashboard,
   updateDashboard,
   getPaymentTypes,
-  configureApiSettings
+  configureApiSettings,
+  setMerchantPaymentSettings
 };
