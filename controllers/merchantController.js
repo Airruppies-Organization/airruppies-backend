@@ -165,18 +165,18 @@ const getCashiers = async (req, res) => {
   const merchant_id = req.admin.merchant_id;
 
   const query = { merchant_id };
+
   if (queries.search) {
     const searchTerm = queries.search.trim();
     query.$or = [
-      ...(query.$or || []), // Preserve existing $or conditions
       { fullName: { $regex: searchTerm, $options: "i" } },
       { badge_id: { $regex: searchTerm, $options: "i" } },
     ];
   }
 
   if (queries.cashierStatus) {
-    const statusCondition = { status: queries.cashierStatus === "true" };
-    query.$or = [...(query.$or || []), statusCondition]; // Add status condition to $or
+    const status = queries.cashierStatus === "true"; // Convert to boolean
+    query.status = status; // Add status condition directly to the query object
   }
 
   try {
