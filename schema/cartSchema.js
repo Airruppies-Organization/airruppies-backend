@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const validator = require("validator");
 
 const Schema = mongoose.Schema;
 
@@ -33,19 +31,26 @@ const cartFormat = new Schema(
     status: {
       type: String,
       default: "active",
-    }
+    },
   },
   { timestamps: true }
 );
 
+cartFormat.pre("save", function (next) {
+  this.price = parseFloat(this.price.toFixed(2));
+  next();
+});
 
 cartFormat.statics.getCartItems = async function (user_id, merchant_id) {
   if (!user_id) throw new Error("user id not defined");
 
-  const cartItems = await this.find({user_id, merchant_id, status: 'active'}, { _id: 1, product_name: 1, price: 1, quantity: 1, product_code: 1 });
+  const cartItems = await this.find(
+    { user_id, merchant_id, status: "active" },
+    { _id: 1, product_name: 1, price: 1, quantity: 1, product_code: 1 }
+  );
 
   return cartItems;
-}
+};
 
 cartFormat.statics.addToCart = async function (
   user_id,
@@ -55,11 +60,23 @@ cartFormat.statics.addToCart = async function (
   price,
   product_name
 ) {
-  if (!user_id || !product_code || !product_name || !merchant_id || !quantity || !price) {
+  if (
+    !user_id ||
+    !product_code ||
+    !product_name ||
+    !merchant_id ||
+    !quantity ||
+    !price
+  ) {
     throw new Error("all fields not filled");
   }
 
-  const exist = await this.findOne({ user_id, product_code, merchant_id });
+  const exist = await this.findOne({
+    user_id,
+    product_code,
+    merchant_id,
+    status: "active",
+  });
 
   if (exist) {
     // Increase the quantity of the product in the cart
@@ -68,27 +85,93 @@ cartFormat.statics.addToCart = async function (
     return await exist.save();
   }
 
-  const cart = new this({ user_id, product_code, merchant_id, quantity, price, product_name });
-  return await cart.save();
-}
+  const existed = await this.findOne({
+    user_id,
+    product_code,
+    merchant_id,
+    status: "inactive",
+  });
 
-cartFormat.statics.getCartItem = async function (cart_id){
+  if (existed) {
+    existed.status = "active";
+    existed.quantity = quantity;
+    existed.price = price;
+    return await existed.save();
+  }
+
+  const cart = new this({
+    user_id,
+    product_code,
+    merchant_id,
+    quantity,
+    price,
+    product_name,
+  });
+  return await cart.save();
+};
+
+cartFormat.statics.getCartItem = async function (
+  cart_id,
+  user_id,
+  merchant_id
+) {
   if (!cart_id) {
     throw new Error("cart id not provided");
   }
 
-  const cart = await this.findOne({ _id: cart_id });
+  const cart = await this.findOne({
+    _id: cart_id,
+    user_id: user_id,
+    merchant_id: merchant_id,
+  });
+
   if (!cart) {
     throw new Error("cart not found");
   }
 
   return cart;
-}
+};
 
-cartFormat.statics.removeFromCart = async function (cart_id){
-  const cart = await this.getCartItem(cart_id);
+cartFormat.statics.removeFromCart = async function (cart_id, _id, merchant_id) {
+  const cart = await this.getCartItem(cart_id, _id, merchant_id);
   cart.status = "inactive";
   return await cart.save();
-}
+};
+
+cartFormat.statics.incrementQuantity = async function (
+  cart_id,
+  _id,
+  merchant_id
+) {
+  const cartItem = await this.getCartItem(cart_id, _id, merchant_id);
+  cartItem.quantity += 1;
+
+  // update the price of the cart item
+  cartItem.price = (
+    (cartItem.price / (cartItem.quantity - 1)) *
+    cartItem.quantity
+  ).toFixed(2);
+  return await cartItem.save();
+};
+
+cartFormat.statics.decrementQuantity = async function (
+  cart_id,
+  _id,
+  merchant_id
+) {
+  const cartItem = await this.getCartItem(cart_id, _id, merchant_id);
+  if (cartItem.quantity > 1) {
+    cartItem.quantity -= 1;
+
+    // update the price of the cart item
+    cartItem.price = (
+      (cartItem.price / (cartItem.quantity + 1)) *
+      cartItem.quantity
+    ).toFixed(2);
+    return await cartItem.save();
+  }
+
+  return cartItem;
+};
 
 module.exports = mongoose.model("Cart", cartFormat, "carts");

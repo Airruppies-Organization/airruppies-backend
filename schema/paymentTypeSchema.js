@@ -1,34 +1,36 @@
 const mongoose = require("mongoose");
-const { options } = require("request");
+// const { options } = require("request");
 
 const Schema = mongoose.Schema;
 
 const paymentTypeFormat = new Schema(
-    {
-        paymentType: {
-            type: String,
-            required: true,
-        },
-        status: {
-            type: String,
-            required: true,
-            default: 'active'
-        }
+  {
+    paymentType: {
+      type: String,
+      required: true,
     },
-    {timestamps: true}
+    status: {
+      type: String,
+      required: true,
+      default: "active",
+    },
+  },
+  { timestamps: true }
 );
 
-
 paymentTypeFormat.statics.createPaymentType = async function (
-    paymentType,
-   // merchant_id
+  paymentType
+  // merchant_id
 ) {
+  if (!paymentType) throw new Error("Payment type is required");
 
-    if (!paymentType) throw new Error("Payment type is required");
+  const payment = await this.create({ paymentType });
 
-    const payment = await this.create({paymentType});
+  return payment;
+};
 
-    return payment;
-}
-
-module.exports = mongoose.model('PaymentType', paymentTypeFormat, 'paymentTypes');
+module.exports = mongoose.model(
+  "PaymentType",
+  paymentTypeFormat,
+  "paymentTypes"
+);

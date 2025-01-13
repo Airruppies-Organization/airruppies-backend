@@ -7,8 +7,7 @@ const {
   verifyToken
 } = require("../controllers/adminControllers");
 const router = express.Router();
-const adminRequireAuth = require("../middleware/adminRequireAuth");
-
+// const adminRequireAuth = require("../middleware/adminRequireAuth");
 
 router.post("/createAdmin", createAdmin);
 router.post("/login", login);

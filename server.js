@@ -2,6 +2,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const shopperRoutes = require("./router/shopperRoutes");
 const userRoutes = require("./router/userRoutes");
 const merchantRoutes = require("./router/merchantRoutes");
@@ -15,7 +16,18 @@ const app = express();
 
 // middleware
 app.use(express.json());
-app.use(cors());
+
+//cookie-parser
+app.use(cookieParser());
+
+// cors
+// app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Allow your frontend domain
+    credentials: true, // Allow credentials (cookies)
+  })
+);
 
 app.use((req, res, next) => {
   console.log(`${req.path} :: ${req.method}`);

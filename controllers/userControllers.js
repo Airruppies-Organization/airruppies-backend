@@ -1,4 +1,5 @@
 const User = require("../schema/userSchema");
+const Merchant = require("../schema/merchantSchema");
 const jwt = require("jsonwebtoken");
 const mailer = require("../lib/mailer");
 const otp = require("../lib/otp");
@@ -171,6 +172,7 @@ const googleSignIn = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 const paymentTypes = async (req, res) => {
   const { merchant_id } = req.parama;

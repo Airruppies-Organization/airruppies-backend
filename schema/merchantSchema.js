@@ -40,15 +40,15 @@ const merchantFormat = new Schema(
       type: Boolean,
       default: true
     },
-    encryptedMerchId: {
-      type: {
-        encryptedData: { type: String },
-        iv: { type: String },
-      },
-    },
+    // encryptedMerchId: {
+    //   type: {
+    //     encryptedData: { type: String },
+    //     iv: { type: String },
+    //   },
+    // },
     refPrefix: {
       type: String,
-      default: "ARP"
+      default: "ARP",
     },
     admins: [String], // Array of admin IDs
     paymentTypes: {
@@ -63,7 +63,7 @@ const merchantFormat = new Schema(
     },
     merchant_product_price: {
       type: String,
-    }
+    },
   },
   { timestamps: true }
 );
@@ -108,16 +108,17 @@ merchantFormat.statics.onboard = async function (
           admins: [admin_id], // Start with the initial admin
           lat,
           lng,
-          encryptedMerchId: {},
+          // encryptedMerchId: {},
         },
       ],
       { session }
     );
 
-    const merchantIdString = merchant._id.toString();
-    const encrypted = encrypter.encrypt(merchantIdString);
-    merchant.encryptedMerchId = encrypted;
-    await merchant.save({ session });
+    // const merchantIdString = merchant._id.toString();
+    // const encrypted = encrypter.encrypt(merchantIdString);
+    // merchant.encryptedMerchId = encrypted;
+    // await merchant.save({ session });
+
     // Update the admin with the new merchant_id
     if (!admin.merchant_id) {
       admin.merchant_id = merchant._id;
@@ -145,7 +146,7 @@ merchantFormat.statics.getMerchantById = async function (id) {
 
   //Find the merchant
   const merchant = await this.findOne({
-    "_id": id
+    _id: id,
   });
 
   if (!merchant) throw new Error("Merchant not found");
@@ -158,7 +159,7 @@ merchantFormat.statics.allMerchants = async function () {
     const merchants = await this.find({ status: true });
     return merchants.map((merchant) => {
       return {
-       // id: merchant.encryptedMerchId.encryptedData,
+        // id: merchant.encryptedMerchId.encryptedData,
         id: _id,
         name: merchant.name,
         address: merchant.address,
@@ -172,30 +173,34 @@ merchantFormat.statics.allMerchants = async function () {
   }
 };
 
-
-merchantFormat.statics.addPaymentType = async function (merchant_id, paymentTypes) {
+merchantFormat.statics.addPaymentType = async function (
+  merchant_id,
+  paymentTypes
+) {
+  console.log(paymentTypes);
   if (!merchant_id || paymentTypes.length === 0) {
     throw new Error("Merchant ID and Payment Type ID are required");
   }
 
-  if (typeof paymentTypes !== 'object') {
+  if (typeof paymentTypes !== "object") {
     throw new Error("Payment Types must be an array");
   }
 
   paymentTypes.forEach((payment) => {
-    if (!mongoose.Types.ObjectId.isValid(payment)) throw new Error("Invalid payment Id");
+    if (!mongoose.Types.ObjectId.isValid(payment))
+      throw new Error("Invalid payment Id");
   });
 
   const merchant = await this.getMerchantById(merchant_id);
   if (!merchant) {
     throw new Error("Merchant not found");
   }
-  
+
   merchant.paymentTypes = paymentTypes;
   await merchant.save();
 
   return this.getPaymentType(merchant_id);
-}
+};
 
 merchantFormat.statics.getPaymentType = async function (merchant_id) {
   if (!merchant_id) {
@@ -212,7 +217,7 @@ merchantFormat.statics.getPaymentType = async function (merchant_id) {
   });
 
   return paymentTypes;
-}
+};
 
 merchantFormat.statics.updateMerchant = async function (merchant_id, data) {
   if (!merchant_id || !data) {
@@ -233,11 +238,23 @@ merchantFormat.statics.updateMerchant = async function (merchant_id, data) {
   });
 
   return await merchant.save();
-}
+};
 
-merchantFormat.statics.configureApiSettings = async function (merchant_id, merchant_product_name, merchant_product_price, api_url) {
-  if (!merchant_id || !merchant_product_name || !merchant_product_price || !api_url) {
-    throw new Error("Merchant ID, Product Name, Product Price, and API URL are required");
+merchantFormat.statics.configureApiSettings = async function (
+  merchant_id,
+  merchant_product_name,
+  merchant_product_price,
+  api_url
+) {
+  if (
+    !merchant_id ||
+    !merchant_product_name ||
+    !merchant_product_price ||
+    !api_url
+  ) {
+    throw new Error(
+      "Merchant ID, Product Name, Product Price, and API URL are required"
+    );
   }
 
   if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
@@ -254,8 +271,6 @@ merchantFormat.statics.configureApiSettings = async function (merchant_id, merch
   merchant.api_url = api_url;
 
   return await merchant.save();
-
-}
-
+};
 
 module.exports = mongoose.model("Merchant", merchantFormat, "merchants");

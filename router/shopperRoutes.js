@@ -1,10 +1,18 @@
 const express = require("express");
-const { getAllMerchants, getMerchant} = require("../controllers/merchantController");
+const {
+  getAllMerchants,
+  getMerchant,
+} = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
-const { profile, paymentTypes } = require('../controllers/userControllers');
-const { addToCart, removeFromCart, getCartItems } = require('../controllers/cartController');
+const { profile, paymentTypes } = require("../controllers/userControllers");
+const {
+  addToCart,
+  removeFromCart,
+  getCartItems,
+  updateCart,
+} = require("../controllers/cartController");
 const Merchant = require("../schema/merchantSchema");
 const {
   productFormat,
@@ -39,6 +47,7 @@ router.get("/profile", profile);
 // });
 
 // find a product
+
 router.get("/product", async (req, res) => {
   const eanCode = req.query.ean_code; // Access query parameter here
 
@@ -61,7 +70,9 @@ router.post("/cart", addToCart);
 router.get("/cart", getCartItems);
 
 // Delete cart item
-router.delete("/cart/:id", removeFromCart);
+router.delete("/cart", removeFromCart);
+
+router.post("/updateCart", updateCart);
 
 router.delete("/sessionData", async (req, res) => {
   try {
@@ -80,7 +91,6 @@ router.delete("/sessionData", async (req, res) => {
 });
 
 //router.post("/order/create", createOrder);
-
 
 router.post("/orders", async (req, res) => {
   const { id, code, method, status, total, data } = req.body;
@@ -104,9 +114,20 @@ router.post("/orders", async (req, res) => {
 
 // router.get("/merchants", getAllMerchants);
 router.get("/merchants", async (req, res) => {
+  const queries = req.query;
+
+  const query = {};
+  if (queries.searchStore) {
+    const searchTerm = queries.searchStore.trim();
+    query.$or = [
+      ...(query.$or || []), // Preserve existing $or conditions
+      { name: { $regex: searchTerm, $options: "i" } },
+    ];
+  }
+
   try {
-    const merchants = await Merchant.find({}).select(
-      "name city state address logo lng lat encryptedMerchId"
+    const merchants = await Merchant.find(query).select(
+      "name city state address logo lng lat _id"
     );
 
     res.status(200).json(merchants);
@@ -115,7 +136,7 @@ router.get("/merchants", async (req, res) => {
   }
 });
 
-router.get("/merchant", getMerchant)
+router.get("/merchant", getMerchant);
 
 // Get Payment Types
 router.get("/paymentTypes", paymentTypes);

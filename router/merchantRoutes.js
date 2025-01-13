@@ -1,19 +1,23 @@
 const express = require("express");
-const { inviteNewAdmin, 
-        addNewAdmin, 
-        onboard, 
-        createCashier,
-        getCashiers,
-        salesData,
-        allTimeSales,
-        getSalesData,
-        getDashboard,
-        saveDashboard,
-        updateDashboard,
-        configureApiSettings,
-        getPaymentTypes,
-        setMerchantPaymentSettings
-      } = require("../controllers/merchantController");
+const {
+  inviteNewAdmin,
+  addNewAdmin,
+  onboard,
+  createCashier,
+  getCashiers,
+  salesData,
+  salesSummary,
+  allTimeSales,
+  getSalesData,
+  getDashboard,
+  saveDashboard,
+  updateDashboard,
+  configureApiSettings,
+  getPaymentTypes,
+  setMerchantPaymentSettings,
+  deactiateAccount,
+  signOut,
+} = require("../controllers/merchantController");
 const router = express.Router();
 
 const { salesFormat } = require("../schema/schema");
@@ -22,6 +26,23 @@ const adminRequireAuth = require("../middleware/adminRequireAuth");
 
 // middleware
 router.use(adminRequireAuth);
+
+router.get("/check-auth", (req, res) => {
+  try {
+    const checkID = req.admin._id;
+    const checkMerch = req.admin.merchant_id;
+
+    if (checkID && checkMerch) {
+      res.status(200).json({ success: true, hasMerch: true });
+    } else if (checkID && !checkMerch) {
+      res.status(200).json({ success: true, hasMerch: false });
+    } else {
+      throw new Error("Unauthorized: No token provided");
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 // add merchant
 router.post("/onboard", onboard);
@@ -48,9 +69,11 @@ router.get("/getCashiers", getCashiers);
 //   }
 // });
 
-router.post("/salesData", salesData);
+// router.post("/salesData", salesData);
 
 router.get("/allTimeSales", allTimeSales);
+
+router.get("/sales-summary", salesSummary);
 
 router.get("/salesData", getSalesData);
 
@@ -137,5 +160,8 @@ router.get("/paymentTypes", getPaymentTypes);
 
 router.put("/paymentTypes", setMerchantPaymentSettings);
 
+router.get("/deactivate", deactiateAccount);
+
+router.get("/signout", signOut);
 
 module.exports = router;

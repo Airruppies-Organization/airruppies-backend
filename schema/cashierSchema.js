@@ -13,11 +13,18 @@ const cashierFormat = new Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
+      validate: {
+        validator: validator.isEmail,
+        message: "Invalid email",
+      },
     },
     phoneNumber: {
       type: String,
       required: true,
+      validate: {
+        validator: validator.isMobilePhone,
+        message: "Invalid phone number",
+      },
     },
     password: {
       type: String,
@@ -29,11 +36,18 @@ const cashierFormat = new Schema(
     badge_id: {
       type: String,
       required: true,
-      unique: true,
+    },
+    status: {
+      type: Boolean,
+      required: true,
     },
   },
   { timestamps: true }
 );
+
+// Remove the indexing part to avoid MongoDB enforcing uniqueness
+// cashierFormat.index({ merchant_id: 1, email: 1 }, { unique: true });
+// cashierFormat.index({ merchant_id: 1, badge_id: 1 }, { unique: true });
 
 cashierFormat.statics.signup = async function (
   fullName,
@@ -42,20 +56,39 @@ cashierFormat.statics.signup = async function (
   badge_id,
   merchant_id
 ) {
+  // Validate input fields
   if (!fullName || !email || !badge_id || !merchant_id || !phoneNumber) {
-    throw new Error("all fields not filled");
+    throw new Error("All fields are required");
   }
 
   if (!validator.isEmail(email)) {
-    throw new Error("invalid email");
+    throw new Error("Invalid email");
   }
 
-  const exist = await this.findOne({ badge_id, email });
-
-  if (exist) {
-    throw new Error("An cashier with this email and badgeId already exists");
+  if (!validator.isMobilePhone(phoneNumber)) {
+    throw new Error("Invalid phone number");
   }
 
+  // Manually check if a cashier already exists with the same email and merchant_id
+  const existingCashierByEmail = await this.findOne({ email, merchant_id });
+  if (existingCashierByEmail) {
+    throw new Error(
+      "A cashier with this email already exists for this merchant"
+    );
+  }
+
+  // Optionally, you could check for badge_id uniqueness for a given merchant if required
+  const existingCashierByBadgeId = await this.findOne({
+    badge_id,
+    merchant_id,
+  });
+  if (existingCashierByBadgeId) {
+    throw new Error(
+      "A cashier with this badge ID already exists for this merchant"
+    );
+  }
+
+  // Create the new cashier
   const cashier = await this.create({
     fullName,
     email,
@@ -63,6 +96,7 @@ cashierFormat.statics.signup = async function (
     badge_id,
     merchant_id,
     password: "",
+    status: false,
   });
 
   return cashier;
@@ -75,13 +109,13 @@ cashierFormat.statics.login = async function (badge_id, password) {
 
   const cashier = await this.findOne({ badge_id });
   if (!cashier) {
-    throw new Error("invalid email or password combination");
+    throw new Error("Invalid email or password combination");
   }
 
-  const decod_password = await bcrypt.compare(password, cashier.password);
+  const decoded_password = await bcrypt.compare(password, cashier.password);
 
-  if (!decod_password) {
-    throw new Error("invalid email or password combination");
+  if (!decoded_password) {
+    throw new Error("Invalid email or password combination");
   }
 
   return cashier;
@@ -103,8 +137,8 @@ cashierFormat.statics.updatePassword = async function (email, password) {
 
   if (!validator.isEmail(email)) throw new Error("Invalid email");
 
-  const cashier = await this.findOne({ email});
-  if (!user) throw new Error("No user with this email");
+  const cashier = await this.findOne({ email });
+  if (!cashier) throw new Error("No user with this email");
 
   const salt = await bcrypt.genSalt(10);
   const hash_password = await bcrypt.hash(password, salt);
