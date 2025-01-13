@@ -2,7 +2,7 @@ const Admin = require("../schema/adminSchema");
 const jwt = require("jsonwebtoken");
 const mailer = require("../lib/mailer");
 const otp = require("../lib/otp");
-const redisClient = require("../lib/redis");
+const Otp = require("../schema/otpSchema");
 const mongoose = require("mongoose");
 
 const createToken = (_id) => {
@@ -53,11 +53,24 @@ const sendToken = async (req, res) => {
     const admin = await Admin.getAdminByEmail(email);
     if (admin) {
       const otpcode = otp(7);
-      console.log(otpcode);
       const message = `Please use this OTP ${otpcode} to verify your email`;
-      redisClient.set(email, otpcode, 3600);
+      const expTime = Date.now() + (2 * 60 * 1000);
+      await Otp.createCode(email, otpcode, expTime);
       mailer.sendEmail("donotreply", email, message, "Password Reset");
       return res.status(200).json({ message: "OTP sent" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const verifyToken = async (req, res) => {
+  const { email, otpcode } = req.body;
+
+  try {
+    const isVerified = await Otp.verifyCode(email, otpcode);
+    if (isVerified) {
+      return res.status(200).json({ message: "OTP verified" });
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -77,4 +90,4 @@ const resetPassword = async (req, res) => {
 
 // const googleSignUp = async (req, res) => {};
 
-module.exports = { createAdmin, login, sendToken, resetPassword };
+module.exports = { createAdmin, login, sendToken, resetPassword, verifyToken };
