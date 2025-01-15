@@ -13,6 +13,10 @@ const cashierRequireAuth = async (req, res, next) => {
   try {
     const { _id } = jwt.verify(token, process.env.CASHIER_JWT_SECRET);
 
+    if (!_id) {
+      return res.status(400).json({ error: "Token is invalid or expired" });
+    }
+
     req.cashier = await Cashier.findById({ _id }).select("merchant_id"); // it is this id that we will use for datafetching
 
     next();

@@ -10,7 +10,7 @@ const { sessionFormat } = require("../schema/schema");
 const salesFormat = require("../schema/salesSchema");
 const Bill = require("../schema/billSchema");
 const router = express.Router();
-const cashierAuth = require("../middleware/cashierAuth");
+// const cashierAuth = require("../middleware/cashierAuth");
 
 router.use(cashierRequireAuth);
 
@@ -30,7 +30,7 @@ router.get("/check-auth", (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-router.post("/getbill", cashierAuth, getBill);
+router.post("/getbill", getBill);
 router.post("/resetpassword", resetPassword);
 router.post("/sendtoken", sendToken);
 
@@ -40,6 +40,8 @@ router.get("/billData", async (req, res) => {
   // come back to this
   try {
     const { code } = req.query;
+
+    console.log(code);
 
     const result = await Bill.findOne({
       bill_code: code,
@@ -57,6 +59,7 @@ router.get("/billData", async (req, res) => {
       .status(200)
       .json({ ...result, paymentMethod: paymentMethod.paymentType });
   } catch (err) {
+    console.log(err.message);
     res.status(400).json({ message: err.message });
   }
 });
