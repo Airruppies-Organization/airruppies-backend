@@ -4,13 +4,11 @@ const Cashier = require("../schema/cashierSchema");
 const cashierRequireAuth = async (req, res, next) => {
   // verify authentication
 
-  const { authorization } = req.headers;
+  const token = req.cookies?.cashierToken;
 
-  if (!authorization) {
-    return res.status(401).json({ error: "Authorisation token required" });
+  if (!token) {
+    return res.status(401).json({ error: "Authentication token required" });
   }
-
-  const token = authorization.split(" ")[1];
 
   try {
     const { _id } = jwt.verify(token, process.env.CASHIER_JWT_SECRET);

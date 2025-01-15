@@ -189,6 +189,24 @@ const paymentTypes = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  const { username, phoneNumber, email } = req.body;
+  const user_id = req.user._id;
+
+  try {
+    const newProfile = await User.updateProfile(
+      username,
+      email,
+      phoneNumber,
+      user_id
+    );
+
+    res.status(200).json({ newProfile });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 module.exports = {
   createUser,
   login,
@@ -199,4 +217,5 @@ module.exports = {
   googleSignIn,
   profile,
   paymentTypes,
+  updateProfile,
 };

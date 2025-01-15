@@ -36,7 +36,13 @@ const createAdmin = async (req, res) => {
     const hasMerch = admin.merchant_id ? true : false;
 
     if (hasMerch) {
-      res.status(200).json({ success: true, hasMerch: true });
+      res
+        .status(200)
+        .json({
+          success: true,
+          hasMerch: true,
+          adminName: `${admin.firstName} ${admin.lastName}`,
+        });
     } else {
       res.status(200).json({ success: true, hasMerch: false });
     }

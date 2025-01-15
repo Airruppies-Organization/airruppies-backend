@@ -30,7 +30,7 @@ const userFormat = new Schema(
     authType: {
       type: String,
       default: "local",
-    }
+    },
   },
   { timestamps: true }
 );
@@ -67,7 +67,7 @@ userFormat.statics.signup = async function (
     email,
     phoneNumber,
     password: hash_password,
-    authType: "local"
+    authType: "local",
   });
 
   return user;
@@ -109,7 +109,7 @@ userFormat.statics.getUserByEmail = async function (email) {
   if (!user) throw new Error("No user with this email");
 
   return user;
-}
+};
 
 userFormat.statics.updatePassword = async function (email, password) {
   if (!email || !password) throw new Error("Please provide email and password");
@@ -126,22 +126,21 @@ userFormat.statics.updatePassword = async function (email, password) {
   await user.save();
 
   return user;
-}
+};
 
-userFormat.statics.thirdPartyAuth = async function(
-  email,
-  phoneNumber
-){
-  if (!email || !phoneNumber) throw new Error("Please provide email and phone number");
+userFormat.statics.thirdPartyAuth = async function (email, phoneNumber) {
+  if (!email || !phoneNumber)
+    throw new Error("Please provide email and phone number");
 
   if (!validator.isEmail(email)) throw new Error("Invalid email");
 
-  if (!validator.isMobilePhone(phoneNumber)) throw new Error("Invalid phone number");
+  if (!validator.isMobilePhone(phoneNumber))
+    throw new Error("Invalid phone number");
 
   const user = await this.findOne({ email });
 
   if (user) throw new Error("User already exists");
-  const username = email.split("@")[0]; 
+  const username = email.split("@")[0];
   const password = `${username}1234`;
   const emailVerified = true;
 
@@ -151,16 +150,13 @@ userFormat.statics.thirdPartyAuth = async function(
     username,
     password,
     emailVerified,
-    authType: "google"
+    authType: "google",
   });
 
   return newUser;
+};
 
-}
-
-userFormat.statics.thirdPartySignIn = async function(
-  email
-){
+userFormat.statics.thirdPartySignIn = async function (email) {
   if (!email) throw new Error("Please provide email");
 
   if (!validator.isEmail(email)) throw new Error("Invalid email");
@@ -169,9 +165,38 @@ userFormat.statics.thirdPartySignIn = async function(
 
   if (!user) throw new Error("User does not exist");
 
-  if (user.authType == "local") throw new Error("User cannot sign in with this method");
+  if (user.authType == "local")
+    throw new Error("User cannot sign in with this method");
 
   return user;
-}
+};
+
+userFormat.statics.updateProfile = async function (
+  username,
+  email,
+  phoneNumber,
+  user_id
+) {
+  if (!validator.isEmail(email)) {
+    throw new Error("Invalid Email format");
+  }
+
+  if (!validator.isMobilePhone(phoneNumber)) {
+    throw new Error("Invalid phone number");
+  }
+
+  const user = await this.findById(user_id);
+
+  if (!user) {
+    throw new Error("User does not exist");
+  }
+
+  user.email = email;
+  user.phoneNumber = phoneNumber;
+  user.username = username;
+  await user.save();
+
+  return user;
+};
 
 module.exports = mongoose.model("User", userFormat, "users");

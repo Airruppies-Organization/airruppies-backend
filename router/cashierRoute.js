@@ -1,6 +1,5 @@
 const express = require("express");
 const {
-  login,
   getBill,
   resetPassword,
   sendToken,
@@ -15,7 +14,22 @@ const cashierAuth = require("../middleware/cashierAuth");
 
 router.use(cashierRequireAuth);
 
-router.post("/login", login);
+router.get("/check-auth", (req, res) => {
+  try {
+    const checkID = req.cashier._id;
+    const checkMerch = req.cashier.merchant_id;
+
+    if (checkID && checkMerch) {
+      res.status(200).json({ success: true, hasMerch: true });
+    } else if (checkID && !checkMerch) {
+      res.status(200).json({ success: true, hasMerch: false });
+    } else {
+      throw new Error("Unauthorized: No token provided");
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 router.post("/getbill", cashierAuth, getBill);
 router.post("/resetpassword", resetPassword);
 router.post("/sendtoken", sendToken);
