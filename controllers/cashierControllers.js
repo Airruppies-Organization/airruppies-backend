@@ -10,7 +10,6 @@ const adminRequireAuth = require("../middleware/adminRequireAuth");
 const Order = require("../schema/orderSchema");
 const Session = require("../schema/sessionSchema");
 
-
 const createToken = (_id) => {
   const token = jwt.sign({ _id }, process.env.CASHIER_JWT_SECRET, {
     expiresIn: "2d",
@@ -20,10 +19,24 @@ const createToken = (_id) => {
 
 const login = async (req, res) => {
   const { badge_id, password } = req.body;
+
   try {
     const cashier = await Cashier.login(badge_id, password);
     const token = createToken(cashier._id);
-    res.status(200).json({ badge_id, token }); // supposed to be email, token and an id for that particular business
+
+    res.cookie("cashierToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 2 * 24 * 60 * 60 * 1000 - 60 * 60 * 1000, // 1 hour before 2 days
+      sameSite: "Lax",
+    });
+
+    res.status(200).json({
+      // email: cashier.email,
+      // token,
+      // businessId: cashier.businessId,
+      success: true,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -32,31 +45,35 @@ const login = async (req, res) => {
 const getBill = async (req, res) => {
   const { merchant_id, bill_code } = req.body;
 
-  try{
-      const bills = await Session.aggregate([
-          {
-              $match: { bill_code, merchant_id }
-          },
-          {
-              $lookup: {
-                  from: "bills",
-                  localField: "bill_code",
-                  foreignField: "bill_code",
-                  as: "bills"
-              }
-          }
-      ])
-      .then((response)=>{
-          response[0].orders = response[0].orders.map(async (order) => {
-              return await Order.find({_id: order});
-          });
-      }, error => {throw new Error(error)});
+  try {
+    const bills = await Session.aggregate([
+      {
+        $match: { bill_code, merchant_id },
+      },
+      {
+        $lookup: {
+          from: "bills",
+          localField: "bill_code",
+          foreignField: "bill_code",
+          as: "bills",
+        },
+      },
+    ]).then(
+      (response) => {
+        response[0].orders = response[0].orders.map(async (order) => {
+          return await Order.find({ _id: order });
+        });
+      },
+      (error) => {
+        throw new Error(error);
+      }
+    );
 
-      res.status(200).json(bills);
-  }catch(error){
-      res.status(400).json({ error: error.message });
+    res.status(200).json(bills);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-}
+};
 
 const sendToken = async (req, res) => {
   const { email } = req.body;
@@ -95,7 +112,15 @@ const createPassword = async (req, res) => {
   try {
     const cashier = await Cashier.setPassword(badge_id, password);
     const token = createToken(cashier._id);
-    res.status(200).json({ badge_id, token }); // supposed to be email, token and an id for that particular business
+
+    res.cookie("cashierToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 2 * 24 * 60 * 60 * 1000 - 60 * 60 * 1000, // 1 hour before 2days
+      sameSite: "Lax",
+    });
+
+    res.status(200).json({ badge_id, success: true }); // supposed to be email, token and an id for that particular business
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

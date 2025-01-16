@@ -17,7 +17,7 @@ const adminRequireAuth = async (req, res, next) => {
     }
 
     req.admin = await Admin.findById({ _id }).select("merchant_id"); // Fetch admin data
-    console.log(_id, req.admin.merchant_id);
+
     next();
   } catch (error) {
     res.status(401).json({ error: "Request is not authorized" });
