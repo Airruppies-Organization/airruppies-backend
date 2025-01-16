@@ -38,7 +38,7 @@ const merchantFormat = new Schema(
     },
     status: {
       type: Boolean,
-      default: true,
+      default: true
     },
     // encryptedMerchId: {
     //   type: {
@@ -164,7 +164,7 @@ merchantFormat.statics.allMerchants = async function () {
         name: merchant.name,
         address: merchant.address,
         lng: merchant.lng,
-        lat: merchant.lat,
+        lat: merchant.lat
       };
     });
   } catch (error) {
