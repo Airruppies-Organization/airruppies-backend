@@ -39,10 +39,10 @@ const login = async (req, res) => {
       },
       {
         $lookup: {
-          from: "cart",
+          from: "carts",
           localField: "_id",
           foreignField: "user_id",
-          as: "cart",
+          as: "carts",
         },
       },
       {
@@ -84,7 +84,7 @@ const profile = async (req, res) => {
       },
       {
         $lookup: {
-          from: "cart",
+          from: "carts",
           localField: "_id",
           foreignField: "user_id",
           as: "cart_items",

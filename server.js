@@ -9,6 +9,7 @@ const merchantRoutes = require("./router/merchantRoutes");
 const adminRoutes = require("./router/adminAuthRoute");
 const cashierAuthRoutes = require("./router/cashierAuthRoute");
 const cashierRoutes = require("./router/cashierRoute");
+const superAdminRoutes = require("./router/superAdminRoute");
 // const pageGutter = require("./pageGutter");
 // const { productFormat, cartFormat } = require("./SchemaModel/schema");
 
@@ -24,7 +25,7 @@ app.use(cookieParser());
 // app.use(cors());
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow your frontend domain
+    origin: ["http://localhost:3000", "http://localhost:5000"], // Allow multiple origins
     credentials: true, // Allow credentials (cookies)
   })
 );
@@ -41,6 +42,7 @@ app.use("/merchant/admin/auth", adminRoutes);
 app.use("/merchant/api", merchantRoutes);
 app.use("/merchant/cashier/auth", cashierAuthRoutes);
 app.use("/merchant/cashier", cashierRoutes);
+app.use("/superAdmin/api", superAdminRoutes);
 
 // connecting to the database
 mongoose
