@@ -6,7 +6,11 @@ const {
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
 const User = require("../schema/userSchema");
-const { profile, paymentTypes } = require("../controllers/userControllers");
+const {
+  profile,
+  paymentTypes,
+  updateProfile,
+} = require("../controllers/userControllers");
 const {
   addToCart,
   removeFromCart,
@@ -143,5 +147,7 @@ router.get("/paymentTypes", paymentTypes);
 
 // Pay for Products
 router.post("/pay", createBill);
+
+router.put("/profile", updateProfile);
 
 module.exports = router;

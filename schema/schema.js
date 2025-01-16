@@ -36,34 +36,34 @@ const productFormat = new Schema(
 );
 
 // shopper
-const ordersFormat = new Schema(
-  {
-    id: {
-      type: String,
-      required: true,
-    },
-    user_id: {
-      type: String,
-      required: true,
-    },
-    code: {
-      type: String,
-      required: true,
-    },
-    method: {
-      type: String,
-      required: true,
-    },
-    status: {
-      type: String,
-    },
-    total: {
-      type: Number,
-    },
-    // data: [cartFormat],  // is part of the schema
-  },
-  { timestamps: true }
-);
+// const ordersFormat = new Schema(
+//   {
+//     id: {
+//       type: String,
+//       required: true,
+//     },
+//     user_id: {
+//       type: String,
+//       required: true,
+//     },
+//     code: {
+//       type: String,
+//       required: true,
+//     },
+//     method: {
+//       type: String,
+//       required: true,
+//     },
+//     status: {
+//       type: String,
+//     },
+//     total: {
+//       type: Number,
+//     },
+//     // data: [cartFormat],  // is part of the schema
+//   },
+//   { timestamps: true }
+// );
 
 module.exports = {
   productFormat: mongoose.model(
@@ -73,5 +73,5 @@ module.exports = {
   ),
   // sessionFormat: mongoose.model("sessionFormat", sessionFormat, "session"),
   // salesFormat: mongoose.model("salesFormat", salesFormat, "sales"),
-  ordersFormat: mongoose.model("ordersFormat", ordersFormat, "orders"),
+  // ordersFormat: mongoose.model("ordersFormat", ordersFormat, "orders"),
 };

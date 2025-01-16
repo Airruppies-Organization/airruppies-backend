@@ -1,17 +1,36 @@
 const express = require("express");
-const { login, getBill, resetPassword, sendToken } = require("../controllers/cashierControllers");
+const {
+  getBill,
+  resetPassword,
+  sendToken,
+} = require("../controllers/cashierControllers");
 const cashierRequireAuth = require("../middleware/cashierRequireAuth");
 const paymentType = require("../schema/paymentTypeSchema");
 const { sessionFormat } = require("../schema/schema");
 const salesFormat = require("../schema/salesSchema");
 const Bill = require("../schema/billSchema");
 const router = express.Router();
-const cashierAuth = require("../middleware/cashierAuth");
+// const cashierAuth = require("../middleware/cashierAuth");
 
 router.use(cashierRequireAuth);
 
-router.post("/login", login);
-router.post("/getbill", cashierAuth, getBill);
+router.get("/check-auth", (req, res) => {
+  try {
+    const checkID = req.cashier._id;
+    const checkMerch = req.cashier.merchant_id;
+
+    if (checkID && checkMerch) {
+      res.status(200).json({ success: true, hasMerch: true });
+    } else if (checkID && !checkMerch) {
+      res.status(200).json({ success: true, hasMerch: false });
+    } else {
+      throw new Error("Unauthorized: No token provided");
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+router.post("/getbill", getBill);
 router.post("/resetpassword", resetPassword);
 router.post("/sendtoken", sendToken);
 
@@ -21,6 +40,8 @@ router.get("/billData", async (req, res) => {
   // come back to this
   try {
     const { code } = req.query;
+
+    console.log(code);
 
     const result = await Bill.findOne({
       bill_code: code,
@@ -38,6 +59,7 @@ router.get("/billData", async (req, res) => {
       .status(200)
       .json({ ...result, paymentMethod: paymentMethod.paymentType });
   } catch (err) {
+    console.log(err.message);
     res.status(400).json({ message: err.message });
   }
 });

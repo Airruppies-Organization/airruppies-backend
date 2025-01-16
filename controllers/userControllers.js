@@ -42,8 +42,8 @@ const login = async (req, res) => {
           from: "carts",
           localField: "_id",
           foreignField: "user_id",
-          as: "cart"
-        }
+          as: "carts",
+        },
       },
       {
         $lookup: {
@@ -78,7 +78,7 @@ const profile = async (req, res) => {
         }
       },
       {
-        "$lookup": {
+        $lookup: {
           from: "carts",
           localField: "_id",
           foreignField: "user_id",
@@ -185,4 +185,33 @@ const paymentTypes = async (req, res) => {
   }
 }
 
-module.exports = { createUser, login, sendToken, verifyToken, resetPassword, googleAuthenticate, googleSignIn, profile, paymentTypes };
+const updateProfile = async (req, res) => {
+  const { username, phoneNumber, email } = req.body;
+  const user_id = req.user._id;
+
+  try {
+    const newProfile = await User.updateProfile(
+      username,
+      email,
+      phoneNumber,
+      user_id
+    );
+
+    res.status(200).json({ newProfile });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+module.exports = {
+  createUser,
+  login,
+  sendToken,
+  verifyToken,
+  resetPassword,
+  googleAuthenticate,
+  googleSignIn,
+  profile,
+  paymentTypes,
+  updateProfile,
+};
