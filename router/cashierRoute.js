@@ -1,9 +1,11 @@
 const express = require("express");
+
 const {
   getBill,
   resetPassword,
   sendToken,
 } = require("../controllers/cashierControllers");
+
 const cashierRequireAuth = require("../middleware/cashierRequireAuth");
 const paymentType = require("../schema/paymentTypeSchema");
 const { sessionFormat } = require("../schema/schema");
