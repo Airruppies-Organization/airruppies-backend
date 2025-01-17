@@ -41,6 +41,10 @@ const cashierFormat = new Schema(
       type: Boolean,
       required: true,
     },
+    logged_in: {
+      type: Boolean,
+      required: true,
+    }
   },
   { timestamps: true }
 );
@@ -118,6 +122,9 @@ cashierFormat.statics.login = async function (badge_id, password) {
     throw new Error("Invalid email or password combination");
   }
 
+  cashier.logged_in = true;
+  await cashier.save();
+
   return cashier;
 };
 
@@ -170,6 +177,24 @@ cashierFormat.statics.setPassword = async function (badge_id, password) {
   await cashier.save();
 
   return cashier;
+};
+
+cashierFormat.statics.logout = async function (merchant_id) {
+  const cashier = await this.findOne({merchant_id});
+
+  if (!cashier) return false;
+
+  cashier.logged_in = false;
+  await cashier.save();
+
+  return true
+}
+
+
+cashierFormat.statics.getCashierOnShift = async function (merchant_id) {
+  const cashiers = await this.find({ merchant_id, logged_in: true });
+
+  return cashiers;
 };
 
 module.exports = mongoose.model("Cashier", cashierFormat, "cashier");

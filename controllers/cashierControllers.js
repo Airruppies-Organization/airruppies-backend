@@ -126,5 +126,20 @@ const createPassword = async (req, res) => {
   }
 };
 
-module.exports = { login, getBill, resetPassword, sendToken, createPassword };
+const signOut = async (req, res) => {
+  // const merchant_id = req.admin.merchant_id;
+
+  try {
+    const response = await Cashier.logout(req.cashier.merchant_id);
+
+    // clear the cookie
+    res.clearCookie("cashierToken");
+    
+    res.status(200).json({ success: "Cashier logged out" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+module.exports = { login, getBill, resetPassword, sendToken, createPassword, signOut };
 // module.exports = { createUser, login, sendToken, verifyToken, resetPassword };

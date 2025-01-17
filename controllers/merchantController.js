@@ -135,5 +135,16 @@ const getMerchant = async (req, res) => {
   }
 };
 
+const getCashierOnShift = async (req, res) => {
+  // Gets all logged In Cashiers
 
-module.exports = { getAllMerchants, inviteNewAdmin, addNewAdmin };
+  try {
+    const cashiers = await Cashier.getCashiersOnShift();
+    return res.status(200).json(cashiers);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+
+module.exports = { getAllMerchants, inviteNewAdmin, addNewAdmin, getCashierOnShift };

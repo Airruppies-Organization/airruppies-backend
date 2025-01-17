@@ -3,6 +3,7 @@ const {
   getBill,
   resetPassword,
   sendToken,
+  signOut
 } = require("../controllers/cashierControllers");
 const cashierRequireAuth = require("../middleware/cashierRequireAuth");
 const paymentType = require("../schema/paymentTypeSchema");
@@ -111,6 +112,9 @@ router.delete("/billData", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+
+router.put('/signout', signOut);
 
 // the cashier will remove bill from billSchema, add transaction to sales schema, remove everything from the shopper's cart, amd update the ordersFormat
 
