@@ -14,6 +14,7 @@ const createToken = (_id) => {
 
 const createAdmin = async (req, res) => {
   const { firstName, lastName, email, password, merchant_id } = req.body;
+
   try {
     const admin = await Admin.signup(
       firstName,
@@ -28,25 +29,24 @@ const createAdmin = async (req, res) => {
     // Set HTTP-only cookie
     res.cookie("adminToken", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       maxAge: 2 * 24 * 60 * 60 * 1000 - 60 * 60 * 1000, // 1 hour before 2days
-      sameSite: "Lax",
+      sameSite: "None",
     });
 
     const hasMerch = admin.merchant_id ? true : false;
 
     if (hasMerch) {
-      res
-        .status(200)
-        .json({
-          success: true,
-          hasMerch: true,
-          adminName: `${admin.firstName} ${admin.lastName}`,
-        });
+      res.status(200).json({
+        success: true,
+        hasMerch: true,
+        adminName: `${admin.firstName} ${admin.lastName}`,
+      });
     } else {
       res.status(200).json({ success: true, hasMerch: false });
     }
   } catch (error) {
+    console.log(error.message);
     res.status(400).json({ error: error.message });
   }
 };
@@ -59,9 +59,9 @@ const login = async (req, res) => {
 
     res.cookie("adminToken", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       maxAge: 2 * 24 * 60 * 60 * 1000 - 60 * 60 * 1000, // 1 hour before 2days
-      sameSite: "Lax",
+      sameSite: "None",
     });
 
     const hasMerch = admin.merchant_id ? true : false;

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const Merchant = require("./merchantSchema");
+const encrypter = require("../lib/encrypt");
 
 const Schema = mongoose.Schema;
 
@@ -43,29 +44,39 @@ adminFormat.statics.signup = async function (
   password,
   merchant_id
 ) {
+  // Validate input fields
   if (!firstName || !lastName || !email || !password) {
-    throw new Error("all fields not filled");
+    throw new Error("All fields are required.");
   }
 
+  // Validate email format
   if (!validator.isEmail(email)) {
-    throw new Error("invalid email");
+    throw new Error("Invalid email format.");
   }
 
+  // Validate password strength
   if (!validator.isStrongPassword(password)) {
-    throw new Error("This password is not strong enough");
+    throw new Error("The password is not strong enough.");
   }
 
-  const exist = await this.findOne({ email });
-
-  if (exist) {
-    throw new Error("An admin with this email already exists");
+  // Check if admin with email already exists
+  const existingAdmin = await this.findOne({ email });
+  if (existingAdmin) {
+    throw new Error("An admin with this email already exists.");
   }
 
+  // Hash the password
   const salt = await bcrypt.genSalt(10);
-  const hash_password = await bcrypt.hash(password, salt);
+  const hashedPassword = await bcrypt.hash(password, salt);
 
+  let decryptedMerchantId;
   if (merchant_id) {
-    const existingMerchant = await Merchant.findById(merchant_id);
+    // Decrypt merchant ID
+    const [encryptedData, iv] = merchant_id.split("/");
+    decryptedMerchantId = encrypter.decrypt({ encryptedData, iv });
+
+    // Verify the merchant exists
+    const existingMerchant = await Merchant.findById(decryptedMerchantId);
     if (!existingMerchant) {
       throw new Error(
         "Merchant does not exist. Please provide a valid merchant ID."
@@ -73,50 +84,17 @@ adminFormat.statics.signup = async function (
     }
   }
 
+  // Create admin
   const admin = await this.create({
     firstName,
     lastName,
     email,
-    password: hash_password,
-    merchant_id,
+    password: hashedPassword,
+    merchant_id: decryptedMerchantId || merchant_id,
   });
 
   return admin;
 };
-
-// adminFormat.statics.login = async function (email, password) {
-//   if (!email || !password) {
-//     throw new Error("Please fill all fields");
-//   }
-
-//   if (!validator.isEmail(email)) {
-//     throw new Error("invalid email");
-//   }
-
-//   const decod_password = await bcrypt.compare(password, admin.password);
-//   if (!decod_password) {
-//     throw new Error("invalid email or password combination");
-//   }
-
-//   const admin = await this.findOne({ email, password, status: true });
-//   console.log(admin);
-//   if (!admin) {
-//     throw new Error("invalid email or password combination");
-//   }
-
-//   if (admin.merchant_id) {
-//     // if the admin has a merchant ID
-//     const existingMerchant = await Merchant.findById(admin.merchant_id); // find the merchant the admin belongs to
-//     if (!existingMerchant) {
-//       // if the merchant does not exist, then throw the error below
-//       throw new Error(
-//         "Merchant does not exist. Please provide a valid merchant ID."
-//       );
-//     }
-//   }
-
-//   return admin;
-// };
 
 adminFormat.statics.login = async function (email, password) {
   if (!email || !password) {

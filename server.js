@@ -25,7 +25,11 @@ app.use(cookieParser());
 // app.use(cors());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:5000"], // Allow multiple origins
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5000",
+      "http://localhost:3001",
+    ], // Allow multiple origins
     credentials: true, // Allow credentials (cookies)
   })
 );

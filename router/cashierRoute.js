@@ -3,6 +3,7 @@ const {
   getBill,
   resetPassword,
   sendToken,
+  signOut,
 } = require("../controllers/cashierControllers");
 const cashierRequireAuth = require("../middleware/cashierRequireAuth");
 const paymentType = require("../schema/paymentTypeSchema");
@@ -162,5 +163,7 @@ router.post("/clearOrder", async (req, res) => {
 //     res.status(400).json({ error: error.message });
 //   }
 // });
+
+router.put("/signout", signOut);
 
 module.exports = router;
