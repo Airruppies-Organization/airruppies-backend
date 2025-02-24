@@ -207,6 +207,46 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const setPinCode = async (req, res) => {
+  const { pin } = req.body;
+  const user_id = req.user_id;
+
+  try {
+
+    if (pin == "") throw new Error("Pin Field is required");
+
+    const userProfile = await User.updatePin(user_id, pin);
+
+    res.status(200).json({ message: "Pin is set successfully!", user: userProfile })
+
+  }catch(err) {
+    res.status(400).json({error : err.message})
+  }
+}
+
+const authorizePayment = async (req, res) => {
+  const { pin } = req.body;
+  const user_id = req.user_id;
+
+  try {
+
+    if (pin == "") throw new Error("Pin Field is required");
+
+    const authorize = await User.authorizeTransaction(user_id, pin);
+
+    if (!authorize) return res.status(200).json({message: "Pin is invalid"});
+
+    return res.status(200).json({ message: "Payment Authorized Successfully!"})
+
+  }catch(err) {
+    res.status(400).json({error : err.message})
+  }
+}
+
+const verifyAddress = async (req, res) => {
+  const { addressFile } = req.body;
+}
+
 
 module.exports = {
   createUser,
@@ -219,4 +259,17 @@ module.exports = {
   profile,
   paymentTypes,
   updateProfile,
+  setPinCode,
+  authorizePayment
 };
+
+
+
+/**
+ *  TO DO LIST
+ * 
+ *  PIN SETUP
+ *  KYC VERIFICATION 
+ * 
+ * 
+ */
