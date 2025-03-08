@@ -37,9 +37,10 @@ const cashierFormat = new Schema(
       type: String,
       required: true,
     },
-    status: {
+    logged_in: {
       type: Boolean,
       required: true,
+      default: false,
     },
     logged_in: {
       type: Boolean,
@@ -180,21 +181,32 @@ cashierFormat.statics.setPassword = async function (badge_id, password) {
 };
 
 cashierFormat.statics.logout = async function (merchant_id) {
-  const cashier = await this.findOne({merchant_id});
+  const cashier = await this.findOne({ merchant_id });
 
   if (!cashier) return false;
 
   cashier.logged_in = false;
   await cashier.save();
 
-  return true
-}
+  return true;
+};
 
+cashierFormat.statics.removeCashier = async function (merchant_id, cashier_id) {
+  if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
+    throw new Error("Invalid Merchant_ID");
+  }
 
-cashierFormat.statics.getCashierOnShift = async function (merchant_id) {
-  const cashiers = await this.find({ merchant_id, logged_in: true });
+  if (!mongoose.Types.ObjectId.isValid(cashier_id)) {
+    throw new Error("Invalid Cashier_ID");
+  }
 
-  return cashiers;
+  const cashier = await this.findOneAndDelete({ _id: cashier_id, merchant_id });
+
+  if (!cashier) {
+    throw new Error("Cashier does not exist");
+  }
+
+  return cashier;
 };
 
 module.exports = mongoose.model("Cashier", cashierFormat, "cashier");

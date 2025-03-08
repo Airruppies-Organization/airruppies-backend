@@ -8,6 +8,7 @@ const paymentType = require("../schema/paymentTypeSchema");
 
 const { dashboardFormat } = require("../schema/schema");
 const salesFormat = require("../schema/salesSchema");
+const encrypter = require("../lib/encrypt");
 
 require("dotenv").config();
 
@@ -51,7 +52,8 @@ const getAllMerchants = async (req, res) => {
 };
 
 const inviteNewAdmin = async (req, res) => {
-  const { email, merchant_id } = req.body;
+  const merchant_id = req.admin.merchant_id;
+  const { email } = req.body;
 
   try {
     // Verify the Email
@@ -61,12 +63,13 @@ const inviteNewAdmin = async (req, res) => {
     }
 
     //Get the Merchant
+    // const merchant = await Merchant.getMerchantById(merchant_id);
 
-    const merchant = await Merchant.getMerchantById(merchant_id);
+    // encrypt the merchant_id
+    const encryptedMerchantId = encrypter.encrypt(merchant_id);
 
     // Invite the Admin
-    const encryptedMerchantId = merchant.encryptMerchId;
-    const message = `You have been invited to be an admin of a merchant. Click on this link to accept the invite: https://localhost:3000/merchant/invite/${encryptedMerchantId.encryptedData}/${encryptedMerchantId.iv}`;
+    const message = `You have been invited to be an admin of a merchant. Click on this link to accept the invite: http://localhost:3000/admin/auth/signup?invite=${encryptedMerchantId.encryptedData}/${encryptedMerchantId.iv}`;
     mailer.sendEmail("donotreply", email, message, "Admin Invite");
 
     return res.status(200).json({ message: "Admin invited" });
@@ -147,15 +150,31 @@ const createCashier = async (req, res) => {
       merchant_id
     );
 
-    res.status(200).json({
-      fullName: result.fullName,
-      email: result.email,
-      phoneNumber: result.phoneNumber,
-      badge_id: result.badge_id,
-    }); // supposed to be email, token, and an id for that particular business
+    res.status(200).json(result); // supposed to be email, token, and an id for that particular business
   } catch (error) {
     console.log(error.message);
 
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const removeCashier = async (req, res) => {
+  const merchant_id = req.admin.merchant_id;
+  const cashier_id = req.params._id;
+
+  console.log(cashier_id);
+
+  try {
+    const deactivatedCashier = await Cashier.removeCashier(
+      merchant_id,
+      cashier_id
+    );
+
+    res.status(200).json({
+      message: "cashier deactivated successfully",
+      deactivatedCashier,
+    });
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
@@ -176,12 +195,12 @@ const getCashiers = async (req, res) => {
 
   if (queries.cashierStatus) {
     const status = queries.cashierStatus === "true"; // Convert to boolean
-    query.status = status; // Add status condition directly to the query object
+    query.logged_in = status; // Add status condition directly to the query object
   }
 
   try {
     const cashiers = await Cashier.find(query).select(
-      "fullName email phoneNumber badge_id"
+      "fullName email phoneNumber badge_id logged_in"
     );
 
     res.status(200).json(cashiers);
@@ -491,6 +510,7 @@ const updateDashboard = async (req, res) => {
 
 const getPaymentTypes = async (req, res) => {
   const { merchant_id } = req.admin;
+  console.log(merchant_id);
 
   try {
     const paymentTypes = await paymentType.find({});
@@ -600,5 +620,6 @@ module.exports = {
   setMerchantPaymentSettings,
   deactiateAccount,
   signOut,
+  removeCashier,
   // checkAuth,
 };

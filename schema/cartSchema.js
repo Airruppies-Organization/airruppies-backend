@@ -187,4 +187,19 @@ cartFormat.statics.decrementQuantity = async function (
   return cartItem;
 };
 
+cartFormat.statics.clearCart = async function (user_id, merchant_id) {
+  if (!mongoose.Types.ObjectId.isValid(user_id)) {
+    throw new Error("invalid UserID");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
+    throw new Error("invalid MerchantID");
+  }
+
+  const boughtItems = await this.deleteMany({ user_id, merchant_id });
+
+  console.log(boughtItems);
+  return boughtItems;
+};
+
 module.exports = mongoose.model("Cart", cartFormat, "carts");

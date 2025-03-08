@@ -2,6 +2,7 @@ const User = require("../schema/userSchema");
 const Merchant = require("../schema/merchantSchema");
 const jwt = require("jsonwebtoken");
 const mailer = require("../lib/mailer");
+const Otp = require("../schema/otpSchema");
 const otp = require("../lib/otp");
 const redisClient = require("../lib/redis");
 
@@ -114,12 +115,15 @@ const sendToken = async (req, res) => {
     if (user) {
       const otpcode = otp(7);
       const message = `Please use this OTP ${otpcode} to verify your email`;
-      redisClient.set(email, otpcode, 3600);
+      const expiredTime = Date.now() + 3 * 60 * 1000;
+      await Otp.createCode(email, otpcode, expiredTime);
+
       mailer.sendEmail("donotreply", email, message, "Password Reset");
-      return res.status(200).json({ message: "OTP sent" });
+
+      res.status(200).json({ message: "OTP sent" });
     }
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -127,13 +131,13 @@ const verifyToken = async (req, res) => {
   const { email, otpcode } = req.body;
 
   try {
-    const token = redisClient.get(email);
-    if (token === otpcode) {
+    const isVerified = await Otp.verifyCode(email, otpcode);
+
+    if (isVerified) {
       res.status(200).json({ message: "OTP verified" });
-    } else {
-      res.status(400).json({ message: "OTP not verified" });
     }
   } catch (error) {
+    console.log(error.message);
     res.status(400).json({ error: error.message });
   }
 };
@@ -142,9 +146,10 @@ const resetPassword = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.updatePassword(email, password);
+    await User.updatePassword(email, password);
     res.status(200).json({ message: "Password updated" });
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: error.message });
   }
 };

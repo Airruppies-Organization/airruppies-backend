@@ -17,9 +17,10 @@ const {
   setMerchantPaymentSettings,
   deactiateAccount,
   signOut,
-  getCashierOnShift
+  removeCashier,
 } = require("../controllers/merchantController");
 const router = express.Router();
+const Admin = require("../schema/adminSchema");
 
 const { salesFormat } = require("../schema/schema");
 const adminRequireAuth = require("../middleware/adminRequireAuth");
@@ -45,6 +46,20 @@ router.get("/check-auth", (req, res) => {
   }
 });
 
+router.get("/profile", async (req, res) => {
+  const { _id, merchant_id } = req.admin;
+
+  try {
+    const profile = await Admin.findOne({ _id, merchant_id }).select(
+      "firstName lastName -_id"
+    );
+
+    res.status(200).json(profile);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // add merchant
 router.post("/onboard", onboard);
 
@@ -54,23 +69,7 @@ router.post("/createCashier", createCashier);
 // get cashiers
 router.get("/getCashiers", getCashiers);
 
-// router.get("/sessionData", async (req, res) => {
-//   // come back to this
-//   try {
-//     const { code } = req.query;
-
-//     const result = await sessionFormat.findOne({ code });
-
-//     if (!result) {
-//       return res.status(404).json({ message: "Invalid code" });
-//     }
-//     res.status(200).json(result);
-//   } catch (err) {
-//     res.status(400).json({ message: err.message });
-//   }
-// });
-
-// router.post("/salesData", salesData);
+router.delete("/removeCashier/:_id", removeCashier);
 
 router.get("/allTimeSales", allTimeSales);
 

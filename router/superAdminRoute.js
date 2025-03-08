@@ -113,65 +113,138 @@ router.get("/analysis", async (req, res) => {
   }
 });
 
-router.get("/top-businesses", async (req, res) => {
+router.get("/topBusinessesToday", async (req, res) => {
   try {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
+
+    const dailyTopBusinesses = await Merchant.aggregate([
+      {
+        $addFields: {
+          salesIdString: { $toString: "$_id" }, // Convert the _id field to string
+        },
+      },
+      {
+        $lookup: {
+          from: "sales",
+          localField: "salesIdString",
+          foreignField: "merchant_id",
+          as: "sales",
+        },
+      },
+      {
+        $unwind: {
+          path: "$sales",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          $or: [{ "sales.createdAt": { $gte: startOfDay } }, { sales: null }],
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          businessName: { $first: "$name" },
+          logo: { $first: "$logo" },
+          totalSales: { $sum: { $ifNull: ["$sales.total_price", 0] } },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          businessName: 1, // Include businessName
+          logo: 1, // Include logo
+          totalSales: 1, // Include totalSales
+        },
+      },
+      { $sort: { totalSales: -1 } }, // Sort by total sales in descending order
+      { $limit: 5 }, // Limit to the top 5 businesses
+    ]);
+
+    res.json({ dailyTopBusinesses });
+  } catch (err) {
+    console.error("Error in /topBusinessesToday route:", err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+router.get("/all-businesses", async (req, res) => {
+  try {
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0); // Daily top businesses
-    const dailyTopBusinesses = await Merchant.aggregate([
-      {
-        $lookup: {
-          from: "sales",
-          localField: "_id",
-          foreignField: "merchant_id",
-          as: "sales",
-        },
-      },
-      { $unwind: "$sales" },
-      { $match: { "sales.createdAt": { $gte: startOfDay } } },
-      {
-        $group: {
-          _id: "$_id",
-          businessName: { $first: "$name" },
-          totalSales: { $sum: "$sales.total_price" },
-        },
-      },
-      { $sort: { totalSales: -1 } },
-      { $limit: 5 },
-    ]); // Monthly top businesses
+
+    // Monthly top businesses
     const monthlyTopBusinesses = await Merchant.aggregate([
       {
+        $addFields: {
+          salesIdString: { $toString: "$_id" }, // Convert the _id field to string
+        },
+      },
+      {
         $lookup: {
           from: "sales",
-          localField: "_id",
-          foreignField: "merchant_id",
-          as: "sales",
+          localField: "salesIdString", // Referencing the converted merchant _id
+          foreignField: "merchant_id", // Matching sales with merchant_id
+          as: "sales", // Populate sales array
         },
       },
-      { $unwind: "$sales" },
-      { $match: { "sales.createdAt": { $gte: startOfMonth } } },
       {
-        $group: {
-          _id: "$_id",
-          businessName: { $first: "$name" },
-          totalSales: { $sum: "$sales.total_price" },
+        $addFields: {
+          totalSales: {
+            $sum: {
+              $ifNull: [
+                {
+                  $map: {
+                    input: "$sales",
+                    as: "sale",
+                    in: "$$sale.total_price",
+                  },
+                },
+                [0],
+              ],
+            },
+          },
         },
       },
-      { $sort: { totalSales: -1 } },
-      { $limit: 5 },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          logo: 1,
+          totalSales: 1,
+        },
+      },
+      {
+        $sort: { totalSales: -1 }, // Sort by totalSales in descending order
+      },
     ]);
-    res.json({ dailyTopBusinesses, monthlyTopBusinesses });
+
+    res.json({ monthlyTopBusinesses });
   } catch (err) {
-    console.error("Error in /top-businesses route:", err);
+    console.error("Error in /all-businesses route:", err);
     res.status(500).send("Internal Server Error");
   }
 });
 
 router.get("/monthly-sales", async (req, res) => {
   try {
+    const today = new Date();
+    const twelveMonthsAgo = new Date(
+      today.getFullYear(),
+      today.getMonth() - 11,
+      1
+    ); // Start of the month 12 months ago
+
     const monthlySales = await salesFormat.aggregate([
+      // Match only sales in the past 12 months
+      {
+        $match: {
+          createdAt: { $gte: twelveMonthsAgo },
+        },
+      },
       {
         $group: {
           _id: {
@@ -191,10 +264,32 @@ router.get("/monthly-sales", async (req, res) => {
         },
       },
     ]);
-    res.json(monthlySales);
+
+    // Fill in any missing months in the data
+    const result = [];
+    for (let i = 0; i < 12; i++) {
+      const current = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const year = current.getFullYear();
+      const month = current.getMonth() + 1;
+
+      // Find matching sales for the year and month
+      const match = monthlySales.find(
+        (data) => data.year === year && data.month === month
+      );
+
+      result.unshift({
+        year,
+        month,
+        totalSales: match ? match.totalSales : 0,
+      });
+    }
+
+    console.log(result);
+    res.json(result);
   } catch (err) {
     console.error("Error in /monthly-sales route:", err);
     res.status(500).send("Internal Server Error");
   }
 });
+
 module.exports = router;
