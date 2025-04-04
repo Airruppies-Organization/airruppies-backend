@@ -208,10 +208,10 @@ userFormat.statics.updateProfile = async function (
 };
 
 
-userFormat.statics.updatePin = async (
+userFormat.statics.updatePin = async function (
   user_id,
   pin
-) => {
+) {
   const user = await this.findById(user_id);
 
   if (!user) {
@@ -225,10 +225,10 @@ userFormat.statics.updatePin = async (
   return user
 }
 
-userFormat.statics.authorizeTransaction = async (
+userFormat.statics.authorizeTransaction = async function (
   user_id,
   pin
-) => {
+) {
   const user = await this.findById(user_id);
 
   if (!user) {
@@ -240,6 +240,26 @@ userFormat.statics.authorizeTransaction = async (
   if (user.pin != pin) return false;
 
   return true
+}
+
+userFormat.statics.resetPin = async function(
+  user_id,
+  oldPin,
+  newPin
+) {
+
+  const user = await this.findById({user_id})
+
+  if (!user) {
+    throw new Error("User does not exist");
+  }
+
+  /// Check the OldPin
+  if (oldPin != user.pin) throw new Error("Wrong, forgot your Pin?")
+
+  user.pin = newPin;
+  await user.save();
+  return user;
 }
 
 module.exports = mongoose.model("User", userFormat, "users");

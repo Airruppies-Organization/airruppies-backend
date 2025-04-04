@@ -54,7 +54,7 @@ mongoose
   .then(() => {
     app.listen(process.env.PORT, () => {
       console.log(
-        `connected to db and app is listening on PORT ${process.env.PORT}...`
+        `connected to db and app is listening on PORT http://localhost:${process.env.PORT}...`
       );
     });
   })

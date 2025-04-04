@@ -214,11 +214,11 @@ const updateProfile = async (req, res) => {
 
 const setPinCode = async (req, res) => {
   const { pin } = req.body;
-  const user_id = req.user_id;
+  const user_id = req.user;
 
   try {
 
-    if (pin == "") throw new Error("Pin Field is required");
+    if (!pin) throw new Error("Pin Field is required");
 
     const userProfile = await User.updatePin(user_id, pin);
 
@@ -231,7 +231,7 @@ const setPinCode = async (req, res) => {
 
 const authorizePayment = async (req, res) => {
   const { pin } = req.body;
-  const user_id = req.user_id;
+  const user_id = req.user;
 
   try {
 
@@ -245,6 +245,21 @@ const authorizePayment = async (req, res) => {
 
   }catch(err) {
     res.status(400).json({error : err.message})
+  }
+}
+
+const changePin = async (req, res) => {
+  const { newPin, oldPin } = req.body;
+  const user_id = req.user;
+
+  try{
+    if (newPin == "" || oldPin == "") throw new Error("Invalid Detail, all Fields are required");
+
+    const response = await User.resetPin(user_id, oldPin, newPin);
+
+    res.status(200).json({message: "Pin changed successfully", user})
+  }catch(err) {
+    res.status(400).json({error: err.message})
   }
 }
 
@@ -265,7 +280,8 @@ module.exports = {
   paymentTypes,
   updateProfile,
   setPinCode,
-  authorizePayment
+  authorizePayment,
+  changePin
 };
 
 

@@ -11,7 +11,8 @@ const {
   paymentTypes,
   updateProfile,
   setPinCode,
-  authorizePayment
+  authorizePayment,
+  changePin
 } = require("../controllers/userControllers");
 const {
   addToCart,
@@ -158,6 +159,8 @@ router.put("/profile", updateProfile);
 router.put('/pin/set', setPinCode);
 
 router.post('/authorizePayment', authorizePayment);
+
+router.put('/pin/change', changePin);
 
 
 /// Set KYC

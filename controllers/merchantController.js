@@ -587,6 +587,20 @@ const deactiateAccount = async (req, res) => {
   }
 };
 
+
+const getCashierOnShift = async (req, res) => {
+  const merchant_id = req.admin.merchant_id;
+
+  try {
+    const cashiers = Cashier.getCashierOnline(merchant_id);
+
+    res.status(200).json({cashiers})
+
+  }catch(error) {
+    res.status(400).json({ error: error.message});
+  }
+}
+
 const signOut = async (req, res) => {
   // const merchant_id = req.admin.merchant_id;
 
@@ -621,5 +635,6 @@ module.exports = {
   deactiateAccount,
   signOut,
   removeCashier,
+  getCashierOnShift
   // checkAuth,
 };
