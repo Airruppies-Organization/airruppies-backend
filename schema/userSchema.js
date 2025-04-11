@@ -31,6 +31,14 @@ const userFormat = new Schema(
       type: String,
       default: "local",
     },
+    pin: {
+      type: Number, 
+      default: 1111,
+    },
+    pinSet: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );
@@ -198,5 +206,60 @@ userFormat.statics.updateProfile = async function (
 
   return user;
 };
+
+
+userFormat.statics.updatePin = async function (
+  user_id,
+  pin
+) {
+  const user = await this.findById(user_id);
+
+  if (!user) {
+    throw new Error("User does not exist");
+  }
+
+  user.pin = pin;
+  user.pinSet = true;
+  await user.save()
+
+  return user
+}
+
+userFormat.statics.authorizeTransaction = async function (
+  user_id,
+  pin
+) {
+  const user = await this.findById(user_id);
+
+  if (!user) {
+    throw new Error("User does not exist");
+  }
+
+  if (!user.pinSet) throw new Error("Please setup your pin");
+
+  if (user.pin != pin) return false;
+
+  return true
+}
+
+userFormat.statics.resetPin = async function(
+  user_id,
+  oldPin,
+  newPin
+) {
+
+  const user = await this.findById({user_id})
+
+  if (!user) {
+    throw new Error("User does not exist");
+  }
+
+  /// Check the OldPin
+  if (oldPin != user.pin) throw new Error("Wrong, forgot your Pin?")
+
+  user.pin = newPin;
+  await user.save();
+  return user;
+}
 
 module.exports = mongoose.model("User", userFormat, "users");

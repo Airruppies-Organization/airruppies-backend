@@ -42,6 +42,10 @@ const cashierFormat = new Schema(
       required: true,
       default: false,
     },
+    logged_in: {
+      type: Boolean,
+      required: true,
+    }
   },
   { timestamps: true }
 );
@@ -204,5 +208,18 @@ cashierFormat.statics.removeCashier = async function (merchant_id, cashier_id) {
 
   return cashier;
 };
+
+cashierFormat.statics.getCashierOnline = async (merchant_id) => {
+  if (!mongoose.Types.ObjectId.isValid(merchant_id)) {
+    throw new Error("Invalid Merchant_ID");
+  }
+
+  const cashiers = await this.find({
+    merchant_id,
+    logged_in: true
+  });
+
+  return cashiers;
+}
 
 module.exports = mongoose.model("Cashier", cashierFormat, "cashier");

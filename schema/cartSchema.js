@@ -138,6 +138,19 @@ cartFormat.statics.removeFromCart = async function (cart_id, _id, merchant_id) {
   return await cart.save();
 };
 
+cartFormat.statics.clearCart = async function (user_id, product_code, merchant_id) {
+  if (!user_id) {
+    throw new Error("user id not provided");
+  }
+
+  const cart = await this.updateMany(
+    { user_id, merchant_id, product_code, status: "active" },
+    { status: "inactive" }
+  );
+
+  return cart;
+}
+
 cartFormat.statics.incrementQuantity = async function (
   cart_id,
   _id,

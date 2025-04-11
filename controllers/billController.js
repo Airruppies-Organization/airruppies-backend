@@ -1,6 +1,7 @@
 const Bill = require("../schema/billSchema");
 const Session = require("../schema/sessionSchema");
 const Order = require("../schema/orderSchema");
+const Cart = require("../schema/cartSchema");
 
 const createBill = async (req, res) => {
   const { data, merchant_id, price, quantity, paymentMethod } = req.body;
@@ -24,6 +25,24 @@ const createBill = async (req, res) => {
       quantity,
       merchant_id
     );
+
+    /// Create the Order and Clear the Cart
+    if (bill.paymentStatus === "paid") {
+      data.forEach(async (order) => {
+        await Order.createOrder(
+          _id,
+          order.product_code,
+          merchant_id,
+          order.price,
+          order.quantity,
+          bill.bill_code
+        );
+
+        // Clear the Cart
+        await Cart.clearCart(_id, order.product_code, merchant_id);
+      });
+    }
+
     await Session.createSession(bill.bill_code, merchant_id);
 
     res.status(200).json({ bill, message: "bill created" });

@@ -18,6 +18,7 @@ const {
   deactiateAccount,
   signOut,
   removeCashier,
+  getCashierOnShift
 } = require("../controllers/merchantController");
 const router = express.Router();
 const Admin = require("../schema/adminSchema");
@@ -163,5 +164,7 @@ router.put("/paymentTypes", setMerchantPaymentSettings);
 router.get("/deactivate", deactiateAccount);
 
 router.get("/signout", signOut);
+
+router.get("/onlineCashiers", getCashierOnShift);
 
 module.exports = router;

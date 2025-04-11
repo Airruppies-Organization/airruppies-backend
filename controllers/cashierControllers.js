@@ -134,7 +134,6 @@ const signOut = async (req, res) => {
 
     // clear the cookie
     res.clearCookie("cashierToken");
-
     res.status(200).json({ success: "Cashier logged out" });
   } catch (error) {
     res.status(400).json({ error: error.message });
