@@ -29,6 +29,12 @@ const {
 const { createBill } = require("../controllers/billController");
 const encrypter = require("../lib/encrypt");
 
+const {
+  createStaticWallet,
+  createDynamicWallet,
+  getWallet
+} = require("../controllers/walletController")
+
 // middleware
 router.use(requireAuth);
 
@@ -163,8 +169,12 @@ router.post('/authorizePayment', authorizePayment);
 router.put('/pin/change', changePin);
 
 
-/// Set KYC
 
+
+/// WALLET ROUTES
+router.post("/wallet/static/create", createStaticWallet);
+router.post("/wallet/dynamic/create", createDynamicWallet);
+router.get("/wallet/get", getWallet);
 
 
 
