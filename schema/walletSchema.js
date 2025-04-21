@@ -96,4 +96,26 @@ walletFormat.statics.updateWallet = async function(user_id, tx_ref, accountNumbe
     return wallet;
 }
 
+walletFormat.statics.verifyTransaction = async function(data) {
+
+    const wallet = await this.findOne({
+        tx_ref: data.tx_ref,
+        email: data.customer.email
+    });
+
+    if (!wallet) throw new Error("Wallet not found");
+
+    /// Update the Wallet Amount
+    wallet.balance += data.amount;
+
+    await wallet.save();
+
+    return {
+        id: wallet.id,
+        user: wallet.user_id,
+        email: wallet.email,
+        balance: wallet.balance
+    };
+}
+
 module.exports = mongoose.model("Wallet", walletFormat, "wallets");

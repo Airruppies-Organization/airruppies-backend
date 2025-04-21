@@ -180,13 +180,36 @@ const getWallet = async function (req, res){
 }
 
 
-const verifyBVN = async (req, res) => {
+const verifyWalletTransaction = async (req, res) => {
+    try {
+        if (!req.body.event || !req.body["event.type"]) {
+            return res.status(400).json({ message: "Event is required" });
+        }
 
+
+        if (req.body.event !== "charge.completed") {
+            return res.status(400).json({ message: "Invalid Event"});
+        }
+
+        const { data } = req.body;
+
+        // Verify the transaction using the key
+        const transaction = await Wallet.verifyTransaction(data);
+
+        res.status(200).json({
+            message: "Transaction verified successfully",
+            data: transaction
+        });
+    }catch(error) {
+        res.status(400).json({
+            message: error.message
+        })
+    }
 }
-
 
 module.exports = {
     createStaticWallet,
     createDynamicWallet,
-    getWallet
+    getWallet,
+    verifyWalletTransaction
 }
