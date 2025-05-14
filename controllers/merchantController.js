@@ -10,6 +10,12 @@ const { dashboardFormat } = require("../schema/schema");
 const salesFormat = require("../schema/salesSchema");
 const encrypter = require("../lib/encrypt");
 
+const PayoutAccount = require("../schema/payoutAccountSchema");
+
+
+const { validateBody } = require("../lib/validator");
+
+
 require("dotenv").config();
 
 const createToken = (_id) => {
@@ -614,6 +620,60 @@ const signOut = async (req, res) => {
   }
 };
 
+
+const addPayoutAccount = async (req, res) => {
+  try {
+    const merchant_id = req.admin.merchant_id;
+
+    const body = req.body
+    
+    //// validate the requests
+
+    const rule = {
+      accountNumber: ['required', 'number'],
+      accountName: ['required', 'string'],
+      bank: ['required', 'string'],
+      bankCode: ['required', 'number']
+    };
+
+    await validateBody(body, rule);
+
+    if (accountNumber.length != 10)
+    {
+      res.status(400)
+      throw new Error("Invalid Account Number size");
+    }
+
+    /// Create the flutterwave payout account
+    const merchant = Merchant.findById(merchant_id);
+
+    if (!merchant) {
+      res.status(404);
+      throw new Error("Mercchant not found");
+    }
+
+
+    /// Add the merchant bank account
+
+    const payout = new PayoutAccount({
+      merchant_id,
+      accountNumber,
+      accountName,
+      bank,
+      bankCode,
+      status: false
+    });
+  
+    const response = await payout.save();
+
+    return res.status(201).json({ message: "Payout Account Added", data: response });
+  }catch(error) {
+    return res.status(400).json({
+      error
+    })
+  }
+}
+
 module.exports = {
   getAllMerchants,
   inviteNewAdmin,
@@ -635,6 +695,7 @@ module.exports = {
   deactiateAccount,
   signOut,
   removeCashier,
-  getCashierOnShift
+  getCashierOnShift,
+  addPayoutAccount
   // checkAuth,
 };

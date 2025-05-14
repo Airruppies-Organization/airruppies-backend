@@ -263,9 +263,6 @@ const changePin = async (req, res) => {
   }
 }
 
-const verifyAddress = async (req, res) => {
-  const { addressFile } = req.body;
-}
 
 
 module.exports = {
