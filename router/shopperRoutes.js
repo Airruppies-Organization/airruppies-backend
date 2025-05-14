@@ -5,6 +5,7 @@ const {
 } = require("../controllers/merchantController");
 const router = express.Router();
 const requireAuth = require("../middleware/requireAuth");
+const requirePayoutAccount = require("../middleware/hasPayoutAccount");
 const User = require("../schema/userSchema");
 const {
   profile,
@@ -34,6 +35,11 @@ const {
   createDynamicWallet,
   getWallet
 } = require("../controllers/walletController")
+
+const {
+  cardTransaction,
+  addCard  
+} = require("../controllers/paymentController")
 
 // middleware
 router.use(requireAuth);
@@ -176,6 +182,11 @@ router.post("/wallet/static/create", createStaticWallet);
 router.post("/wallet/dynamic/create", createDynamicWallet);
 router.get("/wallet/get", getWallet);
 
+
+
+/// CARD ROUTES
+router.post("/card/add", addCard);
+router.post("/card/pay", requirePayoutAccount, cardTransaction)
 
 
 module.exports = router;

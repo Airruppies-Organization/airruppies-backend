@@ -25,6 +25,7 @@ const Admin = require("../schema/adminSchema");
 
 const { salesFormat } = require("../schema/schema");
 const adminRequireAuth = require("../middleware/adminRequireAuth");
+const { getBanks } = require("../controllers/paymentController");
 // const Cashier = require("../schema/cashierSchema");
 
 // middleware
@@ -166,5 +167,7 @@ router.get("/deactivate", deactiateAccount);
 router.get("/signout", signOut);
 
 router.get("/onlineCashiers", getCashierOnShift);
+
+router.get("/banks", getBanks);
 
 module.exports = router;
