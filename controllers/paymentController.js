@@ -149,9 +149,31 @@ const addCard = async (req, res) => {
     }
 }
 
+const getCards = async (req, res) => {
+  try{
+    const user = req.user;
+
+    ///// get the users saved cards
+
+    const cards = await Card.find({user_id: user});
+
+    if (!cards) {
+      res.status(404);
+      throw new Error('Cards not found');
+    }
+
+    return res.status(200).json({
+      cards
+    });
+
+  }catch(error) {
+    return res.json({error});
+  }
+}
 
 module.exports = {
-    addCard,
-    cardTransaction,
-    getBanks
+  addCard,
+  cardTransaction,
+  getBanks,
+  getCards
 }

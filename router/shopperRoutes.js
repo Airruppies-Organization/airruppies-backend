@@ -38,7 +38,8 @@ const {
 
 const {
   cardTransaction,
-  addCard  
+  addCard,
+  getCards
 } = require("../controllers/paymentController")
 
 // middleware
@@ -186,7 +187,9 @@ router.get("/wallet/get", getWallet);
 
 /// CARD ROUTES
 router.post("/card/add", addCard);
+router.get("/card/get", getCards);
 router.post("/card/pay", requirePayoutAccount, cardTransaction)
+
 
 
 module.exports = router;
