@@ -29,18 +29,17 @@ const getBanks = async (req, res) => {
 const cardTransaction = async (req, res) => {
     try{
         const {
-            subAccountId,
-            amount,
-            merchantId
+          card_id,
+          amount,
+          merchantId
         } = req.body
-
 
         const user_id = req.user
 
         /// Validate the body
 
         const rule = {
-          subAccountId: ['required', 'number'],
+          card_id: ['required', 'string'],
           amount: ['required', 'number'],
           merchantId: ['required', 'string']
         }
@@ -48,28 +47,25 @@ const cardTransaction = async (req, res) => {
         await validateBody(req.body, rule);
         /// Use Flutterwave to process the payment
 
-        /// Get the SubAccount
-
-        const subaccount = await PayoutAccount.find({
-                              merchant_id: merchantId,
-                              id: subAccountId,
-                              status: true
-                           });
-
-        
-        if (!subaccount) {
-          res.status(404);
-          throw new Error("Payout Account Not Authorized");
-        }
-  
-        /// Get the token
-        const userCard = await Card.find({
+        //// Verify the card belongs to the user
+        const userCard = await Card.findOne({
+          id: card_id,
           user_id: user_id
         });
 
-        if (!userCard.id) {
+        if (!userCard) {
           res.status(404);
-          throw new Error("User Card not found");
+          throw new Error("Card not found");
+        }
+
+        /// Get the SubAccount
+        const subaccount =  await PayoutAccount.find({
+                              merchant_id: merchantId
+                            });
+
+        if (!subaccount) {
+          res.status(404);
+          throw new Error("Payout Account Not Authorized");
         }
  
         const { token } = userCard.token();

@@ -11,7 +11,9 @@ const salesFormat = require("../schema/salesSchema");
 const encrypter = require("../lib/encrypt");
 
 const PayoutAccount = require("../schema/payoutAccountSchema");
-
+const {
+  addSubAccount
+} = require("../lib/flutterwave")
 
 const { validateBody } = require("../lib/validator");
 
@@ -633,7 +635,8 @@ const addPayoutAccount = async (req, res) => {
       accountNumber: ['required', 'number'],
       accountName: ['required', 'string'],
       bank: ['required', 'string'],
-      bankCode: ['required', 'number']
+      bankCode: ['required', 'number'],
+      phoneNumber: ['required', 'number']
     };
 
     await validateBody(body, rule);
@@ -649,19 +652,24 @@ const addPayoutAccount = async (req, res) => {
 
     if (!merchant) {
       res.status(404);
-      throw new Error("Mercchant not found");
+      throw new Error("Merchant not found");
     }
 
+    /// Create Flutterwave Subaccount
+    const subaccount = await addSubAccount(res, accountNumber, bankCode,  merchant.name, "NG", 1, phoneNumber, merchant.email, "percentage");
 
+    const flwID = subaccount.subaccount_id;
+  
     /// Add the merchant bank account
-
     const payout = new PayoutAccount({
       merchant_id,
       accountNumber,
       accountName,
       bank,
       bankCode,
-      status: false
+      phoneNumber,
+      flwID,
+      status: true
     });
   
     const response = await payout.save();

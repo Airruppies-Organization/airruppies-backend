@@ -26,6 +26,11 @@ const payoutAccountFormat = new Schema(
     },
     flwID: {
       type: String,
+      required: true
+    },
+    phoneNumber: {
+      type: String,
+      required: true
     },
     status: {
       type: Boolean,

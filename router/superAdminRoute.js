@@ -3,6 +3,9 @@ const router = express.Router();
 const Merchant = require("../schema/merchantSchema");
 const Shopper = require("../schema/userSchema");
 const salesFormat = require("../schema/salesSchema");
+const PayoutAccount = require("../schema/payoutAccountSchema");
+const { updateSubAccount } = require("../lib/flutterwave");
+const { validateBody } = require("../lib/validator");
 
 router.get("/analysis", async (req, res) => {
   try {
@@ -291,5 +294,61 @@ router.get("/monthly-sales", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
+router.get("/set-split-percent", async (req, res) => {
+  try {
+
+    const {
+      merchant_id,
+      percentage
+    } = req.body;
+
+    /////Make sure the percentage is a whole number
+    const rule = {
+      percentage: ['required', 'number']
+    }
+
+    await validateBody(req.body, rule);
+
+    ///// Verify the Merchant
+
+    const merchant = await Merchant.findOne({
+      id: merchant_id,
+      status: true
+    });
+
+    if (!merchant) {
+      res.status(404);
+      throw new Error("Merchant not found");
+    }
+
+    ///// Get the Merchnt Payout Account Number
+
+    const payoutAccount = await PayoutAccount.findOne({
+      merchant_id,
+      status: true
+    })
+
+    if (!payoutAccount) {
+      res.status(404);
+      throw new Error("Payout account not set by merchant");
+    }
+
+    //// Get the Subaccount ID
+
+    const subaccount_id = payoutAccount.flwID;
+
+    ///// Update with flutterwave
+
+    const percent = percentage / 100;
+
+    const percentUpdate = await updateSubAccount(res, subaccount_id, percent);
+    
+    return res.status(201).json({percentUpdate});
+  } catch (err) {
+    return res.json(err)
+  }
+});
+
 
 module.exports = router;

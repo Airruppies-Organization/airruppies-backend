@@ -8,7 +8,7 @@ const paymentTypeFormat = new Schema(
     paymentType: {
       type: String,
       required: true,
-      enum: ["Card", "Cash", "Transfer", "Wallet"],
+      enum: ["Card", "Cash", "POS"],
     },
     status: {
       type: String,
